@@ -72,7 +72,7 @@ func main() {
 	log.Println("============ ready to interact with blockchain network ============")
 
 	fmt.Println("initLedger:")
-	initLedger(contract)
+	instantiate(contract)
 
 	// fmt.Println("getAllAssets:")
 	// getAllAssets(contract)
@@ -159,41 +159,40 @@ func newSign() identity.Sign {
 	return sign
 }
 
-/*
- This type of transaction would typically only be run once by an application the first time it was started after its
- initial deployment. A new version of the chaincode deployed later would likely not need to run an "init" function.
-*/
-func initLedger(contract *client.Contract) {
-	fmt.Printf("Submit Transaction: InitLedger, function creates the initial set of assets on the ledger \n")
+// The following are the functions corresponding to the functions defined in the smart contract
+// The instantiate function do nothing but the required setup of the ledger
+func instantiate(contract *client.Contract)  {
+	fmt.Printf("Submit Transaction: Instantiate, function calls the instantiate function, with no effect")
 
-	_, err := contract.SubmitTransaction("InitLedger")
+	_, err := contract.SubmitTransaction("Instantiate")
 	if err != nil {
-		panic(fmt.Errorf("failed to submit transaction: %w", err))
+		panic(fmt.Errorf("failed to instantiate: %w",err))
 	}
 
 	fmt.Printf("*** Transaction committed successfully\n")
 }
 
 // Evaluate a transaction to query ledger state.
-func getAllAssets(contract *client.Contract) {
-	fmt.Println("Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger")
+// func getAllAssets(contract *client.Contract) {
+// 	fmt.Println("Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger")
 
-	evaluateResult, err := contract.EvaluateTransaction("GetAllAssets")
-	if err != nil {
-		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
-	}
-	result := formatJSON(evaluateResult)
+// 	evaluateResult, err := contract.EvaluateTransaction("GetAllAssets")
+// 	if err != nil {
+// 		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
+// 	}
+// 	result := formatJSON(evaluateResult)
 
-	fmt.Printf("*** Result:%s\n", result)
-}
+// 	fmt.Printf("*** Result:%s\n", result)
+// }
 
+// Issuing a new response credit
 // Submit a transaction synchronously, blocking until it has been committed to the ledger.
-func createAsset(contract *client.Contract) {
-	fmt.Printf("Submit Transaction: CreateAsset, creates new asset with ID, Color, Size, Owner and AppraisedValue arguments \n")
+func issueCredit(contract *client.Contract, issuer string, creditNumber string, issueDateTime string)  {
+	fmt.Printf("Submit Transaction: IssueCredit, creates new response credit with credit issuer, credit number and credit issueDateTime")
 
-	_, err := contract.SubmitTransaction("CreateAsset", assetId, "yellow", "5", "Tom", "1300")
+	_, err := contract.SubmitTransaction("Issue",issuer, creditNumber, issueDateTime)
 	if err != nil {
-		panic(fmt.Errorf("failed to submit transaction: %w", err))
+		panic(fmt.Errorf("failed to submit transaction: %w",err))
 	}
 
 	fmt.Printf("*** Transaction committed successfully\n")

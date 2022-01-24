@@ -1,0 +1,5 @@
+# omit Go vendor directories
+vendor/
+.vscode
+.gradle
+.idea

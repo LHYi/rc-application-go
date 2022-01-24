@@ -49,6 +49,7 @@ func main() {
 	sign := newSign()
 
 	// Create a Gateway connection for a specific client identity
+	// ! an X.509 identity and a signature is needed to create the connection to gateway
 	gateway, err := client.Connect(
 		id,
 		client.WithSign(sign),

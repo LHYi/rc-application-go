@@ -11,6 +11,7 @@ import (
 	"log"
 	"path"
 	"time"
+	"os"
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 	"github.com/hyperledger/fabric-gateway/pkg/identity"
@@ -40,6 +41,11 @@ var assetId = fmt.Sprintf("asset%d", now.Unix()*1e3+int64(now.Nanosecond())/1e6)
 
 func main() {
 	log.Println("============ application-golang starts ============")
+	//! DISCOVERY_AS_LOCALHOST should be set to "false" if the network is deployed on other computers
+	err := os.Setenv("DISCOVERY_AS_LOCALHOST", "true")
+	if err != nil {
+		log.Fatalf("Error setting DISCOVERY_AS_LOCALHOST environemnt variable: %v", err)
+	}
 	log.Println("============ connecting to gateway ============")
 	// The gRPC client connection should be shared by all Gateway connections to this endpoint
 	clientConnection := newGrpcConnection()

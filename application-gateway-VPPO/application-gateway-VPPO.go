@@ -16,6 +16,7 @@ import (
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 	"github.com/hyperledger/fabric-gateway/pkg/identity"
 	gwproto "github.com/hyperledger/fabric-protos-go/gateway"
+	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
@@ -27,7 +28,7 @@ const (
 	mspID         = "Org1MSP"
 	cryptoPath    = "../../test-network/organizations/peerOrganizations/org1.example.com"
 	certPath      = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/cert.pem"
-	keyPath       = cryptoPath + "/users/User1@org1.example.com/msp/keystore/"
+	keyDir       = cryptoPath + "/users/User1@org1.example.com/msp/keystore/"
 	tlsCertPath   = cryptoPath + "/peers/peer0.org1.example.com/tls/ca.crt"
 	peerEndpoint  = "localhost:7051"
 	gatewayPeer   = "peer0.org1.example.com"
@@ -47,38 +48,38 @@ func main() {
 		log.Fatalf("Error setting DISCOVERY_AS_LOCALHOST environemnt variable: %v", err)
 	}
 	log.Println("============ connecting to gateway ============")
-	// The gRPC client connection should be shared by all Gateway connections to this endpoint
-	clientConnection := newGrpcConnection()
-	defer clientConnection.Close()
+	// // The gRPC client connection should be shared by all Gateway connections to this endpoint
+	// clientConnection := newGrpcConnection()
+	// defer clientConnection.Close()
 
-	id := newIdentity()
-	sign := newSign()
+	// id := newIdentity()
+	// sign := newSign()
 
-	// Create a Gateway connection for a specific client identity
-	// ! an X.509 identity and a signature is needed to create the connection to gateway
-	gateway, err := client.Connect(
-		id,
-		client.WithSign(sign),
-		client.WithClientConnection(clientConnection),
-		// Default timeouts for different gRPC calls
-		client.WithEvaluateTimeout(5*time.Second),
-		client.WithEndorseTimeout(15*time.Second),
-		client.WithSubmitTimeout(5*time.Second),
-		client.WithCommitStatusTimeout(1*time.Minute),
-	)
-	if err != nil {
-		panic(err)
-	}
-	defer gateway.Close()
-	log.Println("============ connected to gateway ============")
+	// // Create a Gateway connection for a specific client identity
+	// // ! an X.509 identity and a signature is needed to create the connection to gateway
+	// gateway, err := client.Connect(
+	// 	id,
+	// 	client.WithSign(sign),
+	// 	client.WithClientConnection(clientConnection),
+	// 	// Default timeouts for different gRPC calls
+	// 	client.WithEvaluateTimeout(5*time.Second),
+	// 	client.WithEndorseTimeout(15*time.Second),
+	// 	client.WithSubmitTimeout(5*time.Second),
+	// 	client.WithCommitStatusTimeout(1*time.Minute),
+	// )
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer gateway.Close()
+	// log.Println("============ connected to gateway ============")
 
-	log.Println("============ getting network and smart contract ============")
-	network := gateway.GetNetwork(channelName)
-	contract := network.GetContract(chaincodeName)
-	log.Println("============ ready to interact with blockchain network ============")
+	// log.Println("============ getting network and smart contract ============")
+	// network := gateway.GetNetwork(channelName)
+	// contract := network.GetContract(chaincodeName)
+	// log.Println("============ ready to interact with blockchain network ============")
 
-	fmt.Println("initLedger:")
-	instantiate(contract)
+	// fmt.Println("initLedger:")
+	// instantiate(contract)
 
 	// fmt.Println("getAllAssets:")
 	// getAllAssets(contract)
@@ -95,7 +96,67 @@ func main() {
 	// fmt.Println("exampleErrorHandling:")
 	// exampleErrorHandling(contract)
 
+	log.Println("============ enrolling user %s ============", userName)
+	
+	wallet, err := gateway.NewFileSystemWallet("wallet")
+	if err != nil {
+		log.Fatalf("Failed to create wallet: %v", err)
+	}
+
+	if !wallet.Exists("appUser") {
+		err = populateWallet(wallet)
+		if err != nil {
+			log.Fatalf("Failed to populate wallet contents: %v", err)
+		}
+	}
+
+	gw, err := gateway.Connect(
+		gateway.WithConfig(config.FromFile(filepath.Clean(ccpPath))),
+		gateway.WithIdentity(wallet, "appUser"),
+	)
+	if err != nil {
+		log.Fatalf("Failed to connect to gateway: %v", err)
+	}
+	defer gw.Close()
+
+	//TODO: needs to be changed accordingly
+	network, err := gw.GetNetwork(channelName)
+	if err != nil {
+		log.Fatalf("Failed to get network: %v", err)
+	}
+
+	//TODO: needs to be changed accordingly
+	contract := network.GetContract(chaincodeName)
+
 	log.Println("============ application-golang ends ============")
+}
+
+func populateWallet(wallet *gateway.Wallet) error {
+	log.Println("============ Populating wallet ============")
+
+	cert, err := ioutil.ReadFile(filepath.Clean(certPath))
+	if err != nil {
+		return err
+	}
+
+	// the keyDir should contain a single file, which is the private key
+	files, err := ioutil.ReadDir(keyDir)
+	if err != nil {
+		return err
+	}
+	if len(files) != 1 {
+		return fmt.Errorf("keystore folder should have contain one file")
+	}
+
+	keyPath := filepath.Join(keyDir, files[0].Name())
+	key, err := ioutil.ReadFile(filepath.Clean(keyPath))
+	if err != nil {
+		return err
+	}
+
+	identity := gateway.NewX509Identity("Org1MSP", string(cert), string(key))
+
+	return wallet.Put("appUser", identity)
 }
 
 // newGrpcConnection creates a gRPC connection to the Gateway server.
@@ -142,11 +203,11 @@ func loadCertificate(filename string) (*x509.Certificate, error) {
 
 // newSign creates a function that generates a digital signature from a message digest using a private key.
 func newSign() identity.Sign {
-	files, err := ioutil.ReadDir(keyPath)
+	files, err := ioutil.ReadDir(keyDir)
 	if err != nil {
 		panic(fmt.Errorf("failed to read private key directory: %w", err))
 	}
-	privateKeyPEM, err := ioutil.ReadFile(path.Join(keyPath, files[0].Name()))
+	privateKeyPEM, err := ioutil.ReadFile(path.Join(keyDir, files[0].Name()))
 
 	if err != nil {
 		panic(fmt.Errorf("failed to read private key file: %w", err))
@@ -179,17 +240,17 @@ func instantiate(contract *client.Contract)  {
 }
 
 // Evaluate a transaction to query ledger state.
-// func getAllAssets(contract *client.Contract) {
-// 	fmt.Println("Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger")
+func getAllAssets(contract *client.Contract) {
+	fmt.Println("Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger")
 
-// 	evaluateResult, err := contract.EvaluateTransaction("GetAllAssets")
-// 	if err != nil {
-// 		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
-// 	}
-// 	result := formatJSON(evaluateResult)
+	evaluateResult, err := contract.EvaluateTransaction("GetAllAssets")
+	if err != nil {
+		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
+	}
+	result := formatJSON(evaluateResult)
 
-// 	fmt.Printf("*** Result:%s\n", result)
-// }
+	fmt.Printf("*** Result:%s\n", result)
+}
 
 // Issuing a new response credit
 // Submit a transaction synchronously, blocking until it has been committed to the ledger.

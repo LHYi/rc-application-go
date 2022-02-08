@@ -139,11 +139,9 @@ func main() {
 		text = strings.Replace(text, "\n", "", -1)
 		if strings.Compare("exit", text) == 0 {
 			break
-		}
-		else if strings.Compare("instantiate", text) == 0{
+		} else if strings.Compare("instantiate", text) == 0{
 			instantiate(contract)
-		}
-		else {
+		} else {
 			fmt.Print("Wrong input")
 		}
 	}

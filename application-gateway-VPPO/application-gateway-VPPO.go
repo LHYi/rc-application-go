@@ -12,6 +12,8 @@ import (
 	"path"
 	"time"
 	"os"
+	"bufio"
+	"strings"
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 	"github.com/hyperledger/fabric-gateway/pkg/identity"
@@ -34,6 +36,7 @@ const (
 	gatewayPeer   = "peer0.org1.example.com"
 	channelName   = "mychannel"
 	chaincodeName = "basic"
+	userName	  = "appUser"
 )
 
 // Using the timestamp as the assetID
@@ -127,6 +130,23 @@ func main() {
 
 	//TODO: needs to be changed accordingly
 	contract := network.GetContract(chaincodeName)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("-> ")
+    	text, _ := reader.ReadString('\n')
+		text = strings.Replace(text, "\n", "", -1)
+		if strings.Compare("exit", text) == 0 {
+			break
+		}
+		else if strings.Compare("instantiate", text) == 0{
+			instantiate(contract)
+		}
+		else {
+			fmt.Print("Wrong input")
+		}
+	}
 
 	log.Println("============ application-golang ends ============")
 }

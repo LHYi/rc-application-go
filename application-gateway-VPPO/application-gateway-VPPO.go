@@ -29,14 +29,15 @@ import (
 const (
 	mspID         = "Org1MSP"
 	cryptoPath    = "../../test-network/organizations/peerOrganizations/org1.example.com"
+	ccpPath		  = cryptoPath + "/connection-org1.yaml"
 	certPath      = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/cert.pem"
 	keyDir       = cryptoPath + "/users/User1@org1.example.com/msp/keystore/"
 	tlsCertPath   = cryptoPath + "/peers/peer0.org1.example.com/tls/ca.crt"
 	peerEndpoint  = "localhost:7051"
 	gatewayPeer   = "peer0.org1.example.com"
-	channelName   = "mychannel"
-	chaincodeName = "basic"
-	userName	  = "appUser"
+	// channelName   = "mychannel"
+	// chaincodeName = "basic"
+	// userName	  = "appUser"
 )
 
 // Using the timestamp as the assetID
@@ -45,93 +46,106 @@ var assetId = fmt.Sprintf("asset%d", now.Unix()*1e3+int64(now.Nanosecond())/1e6)
 
 func main() {
 	log.Println("============ application-golang starts ============")
+
+	reader := bufio.NewReader(os.Stdin)
 	//! DISCOVERY_AS_LOCALHOST should be set to "false" if the network is deployed on other computers
-	err := os.Setenv("DISCOVERY_AS_LOCALHOST", "true")
-	if err != nil {
-		log.Fatalf("Error setting DISCOVERY_AS_LOCALHOST environemnt variable: %v", err)
+	for {
+		log.Println("============ setting DISCOVERY_AS_LOCALHOST ============")
+		fmt.Print("-> Do you want to set DISCOVERY_AS_LOCALHOST to true? [y/n]: ")
+    	DAL, _ := reader.ReadString('\n')
+		DAL = strings.Replace(DAL, "\n", "", -1)
+		if strings.Compare(DAL, "N") == 0 || strings.Compare(DAL, "n") == 0 {
+			log.Println("-> Setting DISCOVERY_AS_LOCALHOST to false")
+			err := os.Setenv("DISCOVERY_AS_LOCALHOST", "false")
+			if err != nil {
+				log.Fatalf("Error setting DISCOVERY_AS_LOCALHOST environemnt variable: %v", err)
+				os.Exit(1)
+			}
+			log.Println("-> Success")
+			break
+		} else if strings.Compare(DAL, "Y") == 0 || strings.Compare(DAL, "y") == 0 {
+			log.Println("-> Setting DISCOVERY_AS_LOCALHOST to true")
+			err := os.Setenv("DISCOVERY_AS_LOCALHOST", "true")
+			if err != nil {
+				log.Fatalf("Error setting DISCOVERY_AS_LOCALHOST environemnt variable: %v", err)
+				os.Exit(1)
+			}
+			log.Println("-> Success")
+			break
+		} else if strings.Compare(DAL, "exit") == 0 {
+			log.Println("-> Exiting application")
+			os.Exit(0)
+		} else {
+			log.Println("-> Wrong input, please try again or input exit")
+		}
 	}
-	log.Println("============ connecting to gateway ============")
-	// // The gRPC client connection should be shared by all Gateway connections to this endpoint
-	// clientConnection := newGrpcConnection()
-	// defer clientConnection.Close()
-
-	// id := newIdentity()
-	// sign := newSign()
-
-	// // Create a Gateway connection for a specific client identity
-	// // ! an X.509 identity and a signature is needed to create the connection to gateway
-	// gateway, err := client.Connect(
-	// 	id,
-	// 	client.WithSign(sign),
-	// 	client.WithClientConnection(clientConnection),
-	// 	// Default timeouts for different gRPC calls
-	// 	client.WithEvaluateTimeout(5*time.Second),
-	// 	client.WithEndorseTimeout(15*time.Second),
-	// 	client.WithSubmitTimeout(5*time.Second),
-	// 	client.WithCommitStatusTimeout(1*time.Minute),
-	// )
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer gateway.Close()
-	// log.Println("============ connected to gateway ============")
-
-	// log.Println("============ getting network and smart contract ============")
-	// network := gateway.GetNetwork(channelName)
-	// contract := network.GetContract(chaincodeName)
-	// log.Println("============ ready to interact with blockchain network ============")
-
-	// fmt.Println("initLedger:")
-	// instantiate(contract)
-
-	// fmt.Println("getAllAssets:")
-	// getAllAssets(contract)
-
-	// fmt.Println("createAsset:")
-	// createAsset(contract)
-
-	// fmt.Println("readAssetByID:")
-	// readAssetByID(contract)
-
-	// fmt.Println("transferAssetAsync:")
-	// transferAssetAsync(contract)
-
-	// fmt.Println("exampleErrorHandling:")
-	// exampleErrorHandling(contract)
-
-	log.Println("============ enrolling user %s ============", userName)
 	
-	wallet, err := gateway.NewFileSystemWallet("wallet")
-	if err != nil {
-		log.Fatalf("Failed to create wallet: %v", err)
-	}
-
-	if !wallet.Exists("appUser") {
-		err = populateWallet(wallet)
-		if err != nil {
-			log.Fatalf("Failed to populate wallet contents: %v", err)
+	for {
+		log.Println("============ trying to connect to gateway ============")
+		log.Println("-> Please enter your username:")
+		userName, _ := reader.ReadString('\n')
+		userName = strings.Replace(userName, "\n", "", -1)
+		log.Println("-> Please confirm your username is %s: [y/n]", userName)
+		userNameConfirm, _ := reader.ReadString('\n')
+		userNameConfirm = strings.Replace(userNameConfirm, "\n", "", -1)
+		if strings.Compare(userNameConfirm, "Y") == 0 || strings.Compare(userNameConfirm, "y") == 0 {
+			break
 		}
 	}
 
+	log.Println("============ enrolling user %s ============", userName)
+	log.Println("============ creating wallet ============")
+	wallet, err := gateway.NewFileSystemWallet("wallet")
+	if err != nil {
+		log.Fatalf("Failed to create wallet: %v", err)
+		os.Exit(1)
+	}
+	if wallet.Exists(userName) {
+		log.Println("-> User %s already exists", userName)
+		break
+	}
+	if !wallet.Exists(userName) {
+		err = populateWallet(wallet, userName)
+		if err != nil {
+			log.Fatalf("Failed to populate wallet contents: %v", err)
+			os.Exit(1)
+		}
+	}
+	log.Println("============ successfully enroll user %s ============", userName)
+	log.Println("============ connecting to gateway ============")
 	gw, err := gateway.Connect(
 		gateway.WithConfig(config.FromFile(filepath.Clean(ccpPath))),
-		gateway.WithIdentity(wallet, "appUser"),
+		gateway.WithIdentity(wallet, userName),
 	)
 	if err != nil {
 		log.Fatalf("Failed to connect to gateway: %v", err)
+		os.Exit(1)
 	}
 	defer gw.Close()
 
-	//TODO: needs to be changed accordingly
-	network, err := gw.GetNetwork(channelName)
-	if err != nil {
-		log.Fatalf("Failed to get network: %v", err)
+	log.Println("============ connecting to network ============")
+	for {
+		log.Println("-> Please enter the name of the network:")
+		networkName, _ := reader.ReadString('\n')
+		networkName = strings.Replace(networkName, "\n", "", -1)
+		log.Println("-> Please confirm your network name is %s: [y/n]", networkName)
+		networkNameConfirm, _ := reader.ReadString('\n')
+		networkNameConfirm = strings.Replace(networkNameConfirm, "\n", "", -1)
+		if strings.Compare(networkNameConfirm, "Y") == 0 || strings.Compare(networkNameConfirm, "y") == 0 {
+			break
+		}
 	}
 
 	//TODO: needs to be changed accordingly
-	contract := network.GetContract(chaincodeName)
+	network, err := gw.GetNetwork(networkName)
+	if err != nil {
+		log.Fatalf("Failed to get network: %v", err)
+		os.Exit(1)
+	}
+	log.Printf("-> successfully connected to network %s", networkName)
 
-	reader := bufio.NewReader(os.Stdin)
+	//TODO: needs to be changed accordingly
+	contract := network.GetContract(chaincodeName)
 
 	for {
 		fmt.Print("-> ")
@@ -149,7 +163,7 @@ func main() {
 	log.Println("============ application-golang ends ============")
 }
 
-func populateWallet(wallet *gateway.Wallet) error {
+func populateWallet(wallet *gateway.Wallet, username string) error {
 	log.Println("============ Populating wallet ============")
 
 	cert, err := ioutil.ReadFile(filepath.Clean(certPath))
@@ -174,7 +188,7 @@ func populateWallet(wallet *gateway.Wallet) error {
 
 	identity := gateway.NewX509Identity("Org1MSP", string(cert), string(key))
 
-	return wallet.Put("appUser", identity)
+	return wallet.Put(username, identity)
 }
 
 // newGrpcConnection creates a gRPC connection to the Gateway server.

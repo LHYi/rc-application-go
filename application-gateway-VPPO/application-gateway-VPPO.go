@@ -18,6 +18,7 @@ import (
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 	"github.com/hyperledger/fabric-gateway/pkg/identity"
 	gwproto "github.com/hyperledger/fabric-protos-go/gateway"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -28,7 +29,7 @@ import (
 //TODO: to be changed when implemented in Raspberry PI
 const (
 	mspID         = "Org1MSP"
-	cryptoPath    = "../../test-network/organizations/peerOrganizations/org1.example.com"
+	cryptoPath    = "../../fabric-samples/test-network/organizations/peerOrganizations/org1.example.com"
 	ccpPath		  = cryptoPath + "/connection-org1.yaml"
 	certPath      = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/cert.pem"
 	keyDir       = cryptoPath + "/users/User1@org1.example.com/msp/keystore/"

@@ -85,7 +85,7 @@ func main() {
 		log.Println("-> Please enter your username:")
 		userName, _ := reader.ReadString('\n')
 		userName = strings.Replace(userName, "\n", "", -1)
-		log.Println("-> Please confirm your username is %s: [y/n]", userName)
+		log.Println("-> Please confirm your username is", userName, ": [y/n]")
 		userNameConfirm, _ := reader.ReadString('\n')
 		userNameConfirm = strings.Replace(userNameConfirm, "\n", "", -1)
 		if strings.Compare(userNameConfirm, "Y") == 0 || strings.Compare(userNameConfirm, "y") == 0 {
@@ -101,7 +101,7 @@ func main() {
 		os.Exit(1)
 	}
 	if wallet.Exists(userName) {
-		log.Println("-> User %s already exists", userName)
+		log.Println("-> User", userName, "already exists!")
 		break
 	}
 	if !wallet.Exists(userName) {
@@ -111,7 +111,7 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	log.Println("============ successfully enroll user %s ============", userName)
+	log.Println("============ successfully enroll user ", userName, "============")
 	log.Println("============ connecting to gateway ============")
 	gw, err := gateway.Connect(
 		gateway.WithConfig(config.FromFile(filepath.Clean(ccpPath))),
@@ -128,7 +128,7 @@ func main() {
 		log.Println("-> Please enter the name of the network:")
 		networkName, _ := reader.ReadString('\n')
 		networkName = strings.Replace(networkName, "\n", "", -1)
-		log.Println("-> Please confirm your network name is %s: [y/n]", networkName)
+		log.Println("-> Please confirm your network name is", networkName, ": [y/n]")
 		networkNameConfirm, _ := reader.ReadString('\n')
 		networkNameConfirm = strings.Replace(networkNameConfirm, "\n", "", -1)
 		if strings.Compare(networkNameConfirm, "Y") == 0 || strings.Compare(networkNameConfirm, "y") == 0 {
@@ -142,21 +142,40 @@ func main() {
 		log.Fatalf("Failed to get network: %v", err)
 		os.Exit(1)
 	}
-	log.Printf("-> successfully connected to network %s", networkName)
+	log.Println("-> successfully connected to network ", networkName)
+
+	log.Println("============ getting contract ============")
+	for {
+		log.Println("-> Please enter the name of the contract:")
+		contractName, _ := reader.ReadString('\n')
+		contractName = strings.Replace(contractName, "\n", "", -1)
+		log.Println("-> Please confirm your contract name is %v: [y/n]", contractName)
+		contractNameConfirm, _ := reader.ReadString('\n')
+		contractNameConfirm = strings.Replace(contractNameConfirm, "\n", "", -1)
+		if strings.Compare(contractNameConfirm, "Y") == 0 || strings.Compare(contractNameConfirm, "y") == 0 {
+			break
+		}
+	}
 
 	//TODO: needs to be changed accordingly
-	contract := network.GetContract(chaincodeName)
+	contract := network.GetContract(contractName)
+	log.Printf("-> successfully got contract ", contractName)
 
-	for {
-		fmt.Print("-> ")
-    	text, _ := reader.ReadString('\n')
-		text = strings.Replace(text, "\n", "", -1)
-		if strings.Compare("exit", text) == 0 {
-			break
-		} else if strings.Compare("instantiate", text) == 0{
-			instantiate(contract)
-		} else {
-			fmt.Print("Wrong input")
+	scfunctionloop: for {
+		fmt.Print("-> Please enter the name of the smart contract function you want to invoke")
+    	scfunction, _ := reader.ReadString('\n')
+		scfunction = strings.Replace(scfunction, "\n", "", -1)
+		// TODO: waiting to be changed accordingly
+		switch scfunction {
+			case "instantiate":
+				instantiate(contract)
+			// case "issue":
+			// 	issue(contract)
+			case "exit"
+				break scfunctionloop
+			default :
+				fmt.Println("Wrong input! Please try again!")
+
 		}
 	}
 

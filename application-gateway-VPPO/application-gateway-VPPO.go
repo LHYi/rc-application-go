@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/x509"
@@ -9,11 +10,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"path"
-	"time"
 	"os"
-	"bufio"
+	"path"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 	"github.com/hyperledger/fabric-gateway/pkg/identity"
@@ -28,14 +29,14 @@ import (
 // currently working as Org1 on Peer0
 //TODO: to be changed when implemented in Raspberry PI
 const (
-	mspID         = "Org1MSP"
-	cryptoPath    = "../../fabric-samples/test-network/organizations/peerOrganizations/org1.example.com"
-	ccpPath		  = cryptoPath + "/connection-org1.yaml"
-	certPath      = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/cert.pem"
+	mspID        = "Org1MSP"
+	cryptoPath   = "../../fabric-samples/test-network/organizations/peerOrganizations/org1.example.com"
+	ccpPath      = cryptoPath + "/connection-org1.yaml"
+	certPath     = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/cert.pem"
 	keyDir       = cryptoPath + "/users/User1@org1.example.com/msp/keystore/"
-	tlsCertPath   = cryptoPath + "/peers/peer0.org1.example.com/tls/ca.crt"
-	peerEndpoint  = "localhost:7051"
-	gatewayPeer   = "peer0.org1.example.com"
+	tlsCertPath  = cryptoPath + "/peers/peer0.org1.example.com/tls/ca.crt"
+	peerEndpoint = "localhost:7051"
+	gatewayPeer  = "peer0.org1.example.com"
 	// channelName   = "mychannel"
 	// chaincodeName = "basic"
 	// userName	  = "appUser"
@@ -53,7 +54,7 @@ func main() {
 	for {
 		log.Println("============ setting DISCOVERY_AS_LOCALHOST ============")
 		fmt.Print("-> Do you want to set DISCOVERY_AS_LOCALHOST to true? [y/n]: ")
-    	DAL, _ := reader.ReadString('\n')
+		DAL, _ := reader.ReadString('\n')
 		DAL = strings.Replace(DAL, "\n", "", -1)
 		if strings.Compare(DAL, "N") == 0 || strings.Compare(DAL, "n") == 0 {
 			log.Println("-> Setting DISCOVERY_AS_LOCALHOST to false")
@@ -80,11 +81,12 @@ func main() {
 			log.Println("-> Wrong input, please try again or input exit")
 		}
 	}
-	
+
+	var userName string
 	for {
 		log.Println("============ trying to connect to gateway ============")
 		log.Println("-> Please enter your username:")
-		userName, _ := reader.ReadString('\n')
+		userName, _ = reader.ReadString('\n')
 		userName = strings.Replace(userName, "\n", "", -1)
 		log.Println("-> Please confirm your username is", userName, ": [y/n]")
 		userNameConfirm, _ := reader.ReadString('\n')
@@ -103,7 +105,6 @@ func main() {
 	}
 	if wallet.Exists(userName) {
 		log.Println("-> User", userName, "already exists!")
-		break
 	}
 	if !wallet.Exists(userName) {
 		err = populateWallet(wallet, userName)
@@ -124,10 +125,11 @@ func main() {
 	}
 	defer gw.Close()
 
+	var networkName string
 	log.Println("============ connecting to network ============")
 	for {
 		log.Println("-> Please enter the name of the network:")
-		networkName, _ := reader.ReadString('\n')
+		networkName, _ = reader.ReadString('\n')
 		networkName = strings.Replace(networkName, "\n", "", -1)
 		log.Println("-> Please confirm your network name is", networkName, ": [y/n]")
 		networkNameConfirm, _ := reader.ReadString('\n')
@@ -145,10 +147,11 @@ func main() {
 	}
 	log.Println("-> successfully connected to network ", networkName)
 
+	var contractName string
 	log.Println("============ getting contract ============")
 	for {
 		log.Println("-> Please enter the name of the contract:")
-		contractName, _ := reader.ReadString('\n')
+		contractName, _ = reader.ReadString('\n')
 		contractName = strings.Replace(contractName, "\n", "", -1)
 		log.Println("-> Please confirm your contract name is %v: [y/n]", contractName)
 		contractNameConfirm, _ := reader.ReadString('\n')
@@ -162,20 +165,22 @@ func main() {
 	contract := network.GetContract(contractName)
 	log.Printf("-> successfully got contract ", contractName)
 
-	scfunctionloop: for {
+scfunctionloop:
+	for {
 		fmt.Print("-> Please enter the name of the smart contract function you want to invoke")
-    	scfunction, _ := reader.ReadString('\n')
+		scfunction, _ := reader.ReadString('\n')
 		scfunction = strings.Replace(scfunction, "\n", "", -1)
 		// TODO: waiting to be changed accordingly
 		switch scfunction {
-			case "instantiate":
-				instantiate(contract)
-			// case "issue":
-			// 	issue(contract)
-			case "exit"
-				break scfunctionloop
-			default :
-				fmt.Println("Wrong input! Please try again!")
+		case "instantiate":
+			//! bug to be fixed, see asset transfer
+			instantiate(*contract)
+		// case "issue":
+		// 	issue(contract)
+		case "exit":
+			break scfunctionloop
+		default:
+			fmt.Println("Wrong input! Please try again!")
 
 		}
 	}
@@ -280,12 +285,12 @@ func newSign() identity.Sign {
 
 // The following are the functions corresponding to the functions defined in the smart contract
 // The instantiate function do nothing but the required setup of the ledger
-func instantiate(contract *client.Contract)  {
+func instantiate(contract *client.Contract) {
 	fmt.Printf("Submit Transaction: Instantiate, function calls the instantiate function, with no effect")
 
 	_, err := contract.SubmitTransaction("Instantiate")
 	if err != nil {
-		panic(fmt.Errorf("failed to instantiate: %w",err))
+		panic(fmt.Errorf("failed to instantiate: %w", err))
 	}
 
 	fmt.Printf("*** Transaction committed successfully\n")
@@ -306,12 +311,12 @@ func getAllAssets(contract *client.Contract) {
 
 // Issuing a new response credit
 // Submit a transaction synchronously, blocking until it has been committed to the ledger.
-func issueCredit(contract *client.Contract, issuer string, creditNumber string, issueDateTime string)  {
+func issueCredit(contract *client.Contract, issuer string, creditNumber string, issueDateTime string) {
 	fmt.Printf("Submit Transaction: IssueCredit, creates new response credit with credit issuer, credit number and credit issueDateTime")
 
-	_, err := contract.SubmitTransaction("Issue",issuer, creditNumber, issueDateTime)
+	_, err := contract.SubmitTransaction("Issue", issuer, creditNumber, issueDateTime)
 	if err != nil {
-		panic(fmt.Errorf("failed to submit transaction: %w",err))
+		panic(fmt.Errorf("failed to submit transaction: %w", err))
 	}
 
 	fmt.Printf("*** Transaction committed successfully\n")

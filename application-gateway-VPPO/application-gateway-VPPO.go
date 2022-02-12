@@ -173,7 +173,6 @@ scfunctionloop:
 		// TODO: waiting to be changed accordingly
 		switch scfunction {
 		case "instantiate":
-			//! bug to be fixed, see asset transfer
 			instantiate(contract)
 		// case "issue":
 		// 	issue(contract)

@@ -174,7 +174,7 @@ scfunctionloop:
 		switch scfunction {
 		case "instantiate":
 			//! bug to be fixed, see asset transfer
-			instantiate(*contract)
+			instantiate(contract)
 		// case "issue":
 		// 	issue(contract)
 		case "exit":
@@ -285,7 +285,7 @@ func newSign() identity.Sign {
 
 // The following are the functions corresponding to the functions defined in the smart contract
 // The instantiate function do nothing but the required setup of the ledger
-func instantiate(contract *client.Contract) {
+func instantiate(contract *gateway.Contract) {
 	fmt.Printf("Submit Transaction: Instantiate, function calls the instantiate function, with no effect")
 
 	_, err := contract.SubmitTransaction("Instantiate")

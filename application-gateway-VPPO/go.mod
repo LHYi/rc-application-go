@@ -2,12 +2,7 @@ module github.com/LHYi/rc-application-go/application-gateway-VPPO
 
 go 1.17
 
-require (
-	github.com/hyperledger/fabric-gateway v1.0.0
-	github.com/hyperledger/fabric-protos-go v0.0.0-20211118165945-23d738fc3553
-	github.com/hyperledger/fabric-sdk-go v1.0.0
-	google.golang.org/grpc v1.43.0
-)
+require github.com/hyperledger/fabric-sdk-go v1.0.0
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
@@ -21,13 +16,13 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/certificate-transparency-go v1.0.21 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hyperledger/fabric v2.1.1+incompatible // indirect
 	github.com/hyperledger/fabric-config v0.0.5 // indirect
 	github.com/hyperledger/fabric-lib-go v1.0.0 // indirect
+	github.com/hyperledger/fabric-protos-go v0.0.0-20211118165945-23d738fc3553 // indirect
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/miekg/pkcs11 v1.0.3 // indirect
 	github.com/mitchellh/mapstructure v1.4.0 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -51,7 +46,9 @@ require (
 	golang.org/x/sys v0.0.0-20211110154304-99a53858aa08 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
+	google.golang.org/grpc v1.43.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.51.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect

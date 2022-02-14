@@ -296,7 +296,7 @@ func instantiate(contract *gateway.Contract) {
 }
 
 // Evaluate a transaction to query ledger state.
-func getAllAssets(contract *client.Contract) {
+func getAllAssets(contract *gateway.Contract) {
 	fmt.Println("Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger")
 
 	evaluateResult, err := contract.EvaluateTransaction("GetAllAssets")
@@ -310,10 +310,10 @@ func getAllAssets(contract *client.Contract) {
 
 // Issuing a new response credit
 // Submit a transaction synchronously, blocking until it has been committed to the ledger.
-func issueCredit(contract *client.Contract, issuer string, creditNumber string, issueDateTime string) {
+func issueCredit(contract *gateway.Contract, creditNumber string, issuer string, issueDateTime string) {
 	fmt.Printf("Submit Transaction: IssueCredit, creates new response credit with credit issuer, credit number and credit issueDateTime")
 
-	_, err := contract.SubmitTransaction("Issue", issuer, creditNumber, issueDateTime)
+	_, err := contract.SubmitTransaction("Issue", creditNumber, issuer, issueDateTime)
 	if err != nil {
 		panic(fmt.Errorf("failed to submit transaction: %w", err))
 	}
@@ -321,11 +321,11 @@ func issueCredit(contract *client.Contract, issuer string, creditNumber string, 
 	fmt.Printf("*** Transaction committed successfully\n")
 }
 
-// Evaluate a transaction by assetID to query ledger state.
-func readAssetByID(contract *client.Contract) {
-	fmt.Printf("Evaluate Transaction: ReadAsset, function returns asset attributes\n")
+// Evaluate a transaction by credit number and issuer to query ledger state.
+func readCredirByID(contract *gateway.Contract, creditNumber string, issuer string) {
+	fmt.Printf("Evaluate Transaction: QueryCredit, function returns credit attributes\n")
 
-	evaluateResult, err := contract.EvaluateTransaction("ReadAsset", assetId)
+	evaluateResult, err := contract.EvaluateTransaction("QueryCredit", issuer, creditNumber)
 	if err != nil {
 		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
 	}
@@ -338,10 +338,11 @@ func readAssetByID(contract *client.Contract) {
 Submit transaction asynchronously, blocking until the transaction has been sent to the orderer, and allowing
 this thread to process the chaincode response (e.g. update a UI) without waiting for the commit notification
 */
-func transferAssetAsync(contract *client.Contract) {
+// TODO: waiting to be modified
+func transferAssetAsync(contract *gateway.Contract) {
 	fmt.Printf("Async Submit Transaction: TransferAsset, updates existing asset owner'\n")
 
-	submitResult, commit, err := contract.SubmitAsync("TransferAsset", client.WithArguments(assetId, "Mark"))
+	submitResult, err := contract.SubmitTransaction("TransferAsset")
 	if err != nil {
 		panic(fmt.Errorf("failed to submit transaction asynchronously: %w", err))
 	}
@@ -349,17 +350,17 @@ func transferAssetAsync(contract *client.Contract) {
 	fmt.Printf("Successfully submitted transaction to transfer ownership from %s to Mark. \n", string(submitResult))
 	fmt.Println("Waiting for transaction commit.")
 
-	if status, err := commit.Status(); err != nil {
-		panic(fmt.Errorf("failed to get commit status: %w", err))
-	} else if !status.Successful {
-		panic(fmt.Errorf("transaction %s failed to commit with status: %d", status.TransactionID, int32(status.Code)))
-	}
+	// if status, err := commit.Status(); err != nil {
+	// 	panic(fmt.Errorf("failed to get commit status: %w", err))
+	// } else if !status.Successful {
+	// 	panic(fmt.Errorf("transaction %s failed to commit with status: %d", status.TransactionID, int32(status.Code)))
+	// }
 
 	fmt.Printf("*** Transaction committed successfully\n")
 }
 
 // Submit transaction, passing in the wrong number of arguments ,expected to throw an error containing details of any error responses from the smart contract.
-func exampleErrorHandling(contract *client.Contract) {
+func exampleErrorHandling(contract *gateway.Contract) {
 	fmt.Println("Submit Transaction: UpdateAsset asset70, asset70 does not exist and should return an error")
 
 	_, err := contract.SubmitTransaction("UpdateAsset")

@@ -167,15 +167,37 @@ func main() {
 
 scfunctionloop:
 	for {
-		fmt.Print("-> Please enter the name of the smart contract function you want to invoke")
+		fmt.Println("-> Please enter the name of the smart contract function you want to invoke")
 		scfunction, _ := reader.ReadString('\n')
 		scfunction = strings.Replace(scfunction, "\n", "", -1)
 		// TODO: waiting to be changed accordingly
 		switch scfunction {
 		case "instantiate":
 			instantiate(contract)
-		// case "issue":
-		// 	issue(contract)
+		case "issue":
+		issueloop:
+			for {
+				log.Println("============ Issuing a new credit ============")
+				fmt.Println("-> Please enter the credit number:")
+				creditNumber, _ := reader.ReadString('\n')
+				creditNumber = strings.Replace(creditNumber, "\n", "", -1)
+				fmt.Println("-> The credit number you entered is: " + creditNumber)
+				fmt.Println("-> Please enter the issuer:")
+				issuer, _ := reader.ReadString('\n')
+				issuer = strings.Replace(issuer, "\n", "", -1)
+				fmt.Println("-> The issuer you entered is: " + issuer)
+				fmt.Println("-> Please enter the issue date and time:")
+				issueDateTime, _ := reader.ReadString('\n')
+				issueDateTime = strings.Replace(issueDateTime, "\n", "", -1)
+				fmt.Println("-> The issue date and time you entered is: " + issueDateTime)
+				fmt.Println("-> Are these input correct? [y/n]")
+				issueConfirm, _ := reader.ReadString('\n')
+				issueConfirm = strings.Replace(issueConfirm, "\n", "", -1)
+				if strings.Compare(issueConfirm, "Y") == 0 || strings.Compare(issueConfirm, "y") == 0 {
+					issueCredit(contract, creditNumber, issuer, issueDateTime)
+					break issueloop
+				}
+			}
 		case "exit":
 			break scfunctionloop
 		default:

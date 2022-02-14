@@ -3,10 +3,8 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"crypto/x509"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -16,14 +14,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hyperledger/fabric-gateway/pkg/client"
 	"github.com/hyperledger/fabric-gateway/pkg/identity"
-	gwproto "github.com/hyperledger/fabric-protos-go/gateway"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/status"
 )
 
 // currently working as Org1 on Peer0
@@ -382,36 +377,36 @@ func transferAssetAsync(contract *gateway.Contract) {
 }
 
 // Submit transaction, passing in the wrong number of arguments ,expected to throw an error containing details of any error responses from the smart contract.
-func exampleErrorHandling(contract *gateway.Contract) {
-	fmt.Println("Submit Transaction: UpdateAsset asset70, asset70 does not exist and should return an error")
+// func exampleErrorHandling(contract *gateway.Contract) {
+// 	fmt.Println("Submit Transaction: UpdateAsset asset70, asset70 does not exist and should return an error")
 
-	_, err := contract.SubmitTransaction("UpdateAsset")
-	if err != nil {
-		switch err := err.(type) {
-		case *client.EndorseError:
-			fmt.Printf("Endorse error with gRPC status %v: %s\n", status.Code(err), err)
-		case *client.SubmitError:
-			fmt.Printf("Submit error with gRPC status %v: %s\n", status.Code(err), err)
-		case *client.CommitStatusError:
-			if errors.Is(err, context.DeadlineExceeded) {
-				fmt.Printf("Timeout waiting for transaction %s commit status: %s", err.TransactionID, err)
-			} else {
-				fmt.Printf("Error obtaining commit status with gRPC status %v: %s\n", status.Code(err), err)
-			}
-		case *client.CommitError:
-			fmt.Printf("Transaction %s failed to commit with status %d: %s\n", err.TransactionID, int32(err.Code), err)
-		}
-		/*
-		 Any error that originates from a peer or orderer node external to the gateway will have its details
-		 embedded within the gRPC status error. The following code shows how to extract that.
-		*/
-		statusErr := status.Convert(err)
-		for _, detail := range statusErr.Details() {
-			errDetail := detail.(*gwproto.ErrorDetail)
-			fmt.Printf("Error from endpoint: %s, mspId: %s, message: %s\n", errDetail.Address, errDetail.MspId, errDetail.Message)
-		}
-	}
-}
+// 	_, err := contract.SubmitTransaction("UpdateAsset")
+// 	if err != nil {
+// 		switch err := err.(type) {
+// 		case *client.EndorseError:
+// 			fmt.Printf("Endorse error with gRPC status %v: %s\n", status.Code(err), err)
+// 		case *client.SubmitError:
+// 			fmt.Printf("Submit error with gRPC status %v: %s\n", status.Code(err), err)
+// 		case *client.CommitStatusError:
+// 			if errors.Is(err, context.DeadlineExceeded) {
+// 				fmt.Printf("Timeout waiting for transaction %s commit status: %s", err.TransactionID, err)
+// 			} else {
+// 				fmt.Printf("Error obtaining commit status with gRPC status %v: %s\n", status.Code(err), err)
+// 			}
+// 		case *client.CommitError:
+// 			fmt.Printf("Transaction %s failed to commit with status %d: %s\n", err.TransactionID, int32(err.Code), err)
+// 		}
+// 		/*
+// 		 Any error that originates from a peer or orderer node external to the gateway will have its details
+// 		 embedded within the gRPC status error. The following code shows how to extract that.
+// 		*/
+// 		statusErr := status.Convert(err)
+// 		for _, detail := range statusErr.Details() {
+// 			errDetail := detail.(*gwproto.ErrorDetail)
+// 			fmt.Printf("Error from endpoint: %s, mspId: %s, message: %s\n", errDetail.Address, errDetail.MspId, errDetail.Message)
+// 		}
+// 	}
+// }
 
 //Format JSON data
 func formatJSON(data []byte) string {

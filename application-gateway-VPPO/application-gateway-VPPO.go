@@ -2,8 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -308,17 +306,17 @@ func instantiate(contract *gateway.Contract) {
 }
 
 // Evaluate a transaction to query ledger state.
-func getAllAssets(contract *gateway.Contract) {
-	fmt.Println("Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger")
+// func getAllAssets(contract *gateway.Contract) {
+// 	fmt.Println("Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger")
 
-	evaluateResult, err := contract.EvaluateTransaction("GetAllAssets")
-	if err != nil {
-		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
-	}
-	result := formatJSON(evaluateResult)
+// 	evaluateResult, err := contract.EvaluateTransaction("GetAllAssets")
+// 	if err != nil {
+// 		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
+// 	}
+// 	result := formatJSON(evaluateResult)
 
-	fmt.Printf("*** Result:%s\n", result)
-}
+// 	fmt.Printf("*** Result:%s\n", result)
+// }
 
 // Issuing a new response credit
 // Submit a transaction synchronously, blocking until it has been committed to the ledger.
@@ -334,17 +332,17 @@ func issueCredit(contract *gateway.Contract, creditNumber string, issuer string,
 }
 
 // Evaluate a transaction by credit number and issuer to query ledger state.
-func readCredirByID(contract *gateway.Contract, creditNumber string, issuer string) {
-	fmt.Printf("Evaluate Transaction: QueryCredit, function returns credit attributes\n")
+// func readCredirByID(contract *gateway.Contract, creditNumber string, issuer string) {
+// 	fmt.Printf("Evaluate Transaction: QueryCredit, function returns credit attributes\n")
 
-	evaluateResult, err := contract.EvaluateTransaction("QueryCredit", issuer, creditNumber)
-	if err != nil {
-		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
-	}
-	result := formatJSON(evaluateResult)
+// 	evaluateResult, err := contract.EvaluateTransaction("QueryCredit", issuer, creditNumber)
+// 	if err != nil {
+// 		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
+// 	}
+// 	result := formatJSON(evaluateResult)
 
-	fmt.Printf("*** Result:%s\n", result)
-}
+// 	fmt.Printf("*** Result:%s\n", result)
+// }
 
 /*
 Submit transaction asynchronously, blocking until the transaction has been sent to the orderer, and allowing
@@ -404,10 +402,10 @@ func transferAssetAsync(contract *gateway.Contract) {
 // }
 
 //Format JSON data
-func formatJSON(data []byte) string {
-	var prettyJSON bytes.Buffer
-	if err := json.Indent(&prettyJSON, data, " ", ""); err != nil {
-		panic(fmt.Errorf("failed to parse JSON: %w", err))
-	}
-	return prettyJSON.String()
-}
+// func formatJSON(data []byte) string {
+// 	var prettyJSON bytes.Buffer
+// 	if err := json.Indent(&prettyJSON, data, " ", ""); err != nil {
+// 		panic(fmt.Errorf("failed to parse JSON: %w", err))
+// 	}
+// 	return prettyJSON.String()
+// }

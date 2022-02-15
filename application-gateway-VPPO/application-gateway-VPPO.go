@@ -235,7 +235,7 @@ func issueCredit(contract *client.Contract, creditNumber string, issuer string, 
 func queryCredit(contract *client.Contract, creditNumber string, issuer string) {
 	fmt.Printf("Evaluate Transaction: QueryCredit, function returns credit attributes\n")
 
-	evaluateResult, err := contract.EvaluateTransaction("Query", issuer, creditNumber)
+	evaluateResult, err := contract.EvaluateTransaction("Query", creditNumber, issuer)
 	if err != nil {
 		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
 	}

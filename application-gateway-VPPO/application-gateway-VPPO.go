@@ -92,7 +92,7 @@ func main() {
 		os.Exit(1)
 	}
 	if wallet.Exists(userName) {
-		log.Println("-> User", userName, "already exists!")
+		log.Println("-> User ", userName, " already exists!")
 	}
 	if !wallet.Exists(userName) {
 		err = populateWallet(wallet, userName)
@@ -119,7 +119,7 @@ func main() {
 		log.Println("-> Please enter the name of the network:")
 		networkName, _ = reader.ReadString('\n')
 		networkName = strings.Replace(networkName, "\n", "", -1)
-		log.Println("-> Please confirm your network name is", networkName, ": [y/n]")
+		log.Println("-> Please confirm your network name is ", networkName, " : [y/n]")
 		networkNameConfirm, _ := reader.ReadString('\n')
 		networkNameConfirm = strings.Replace(networkNameConfirm, "\n", "", -1)
 		if strings.Compare(networkNameConfirm, "Y") == 0 || strings.Compare(networkNameConfirm, "y") == 0 {

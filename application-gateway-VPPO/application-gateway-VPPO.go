@@ -76,7 +76,7 @@ func main() {
 		log.Println("-> Please enter your username:")
 		userName, _ = reader.ReadString('\n')
 		userName = strings.Replace(userName, "\n", "", -1)
-		fmt.Printf("-> Please confirm your username is %v [y/n]: ", userName)
+		fmt.Printf("-> Please confirm your username is %v, [y/n]: ", userName)
 		userNameConfirm, _ := reader.ReadString('\n')
 		userNameConfirm = strings.Replace(userNameConfirm, "\n", "", -1)
 		if strings.Compare(userNameConfirm, "Y") == 0 || strings.Compare(userNameConfirm, "y") == 0 {
@@ -117,7 +117,7 @@ func main() {
 		log.Println("-> Please enter the name of the network:")
 		networkName, _ = reader.ReadString('\n')
 		networkName = strings.Replace(networkName, "\n", "", -1)
-		fmt.Println("-> Please confirm your network name is:", networkName, "[y/n]")
+		fmt.Printf("-> Please confirm your network name is: %v, [y/n]", networkName)
 		networkNameConfirm, _ := reader.ReadString('\n')
 		networkNameConfirm = strings.Replace(networkNameConfirm, "\n", "", -1)
 		if strings.Compare(networkNameConfirm, "Y") == 0 || strings.Compare(networkNameConfirm, "y") == 0 {
@@ -134,7 +134,7 @@ func main() {
 		log.Println("-> Please enter the name of the contract:")
 		contractName, _ = reader.ReadString('\n')
 		contractName = strings.Replace(contractName, "\n", "", -1)
-		fmt.Println("-> Please confirm your contract name is:", contractName, "[y/n]")
+		fmt.Printf("-> Please confirm your contract name is: %v, [y/n]", contractName)
 		contractNameConfirm, _ := reader.ReadString('\n')
 		contractNameConfirm = strings.Replace(contractNameConfirm, "\n", "", -1)
 		if strings.Compare(contractNameConfirm, "Y") == 0 || strings.Compare(contractNameConfirm, "y") == 0 {
@@ -209,7 +209,7 @@ scfunctionloop:
 }
 
 func instantiate(contract *client.Contract) {
-	fmt.Printf("Submit Transaction: Instantiate, function calls the instantiate function, with no effect.\n")
+	log.Println("Submit Transaction: Instantiate, function calls the instantiate function, with no effect.")
 
 	_, err := contract.SubmitTransaction("Instantiate")
 	if err != nil {
@@ -222,7 +222,7 @@ func instantiate(contract *client.Contract) {
 // Issuing a new response credit
 // Submit a transaction synchronously, blocking until it has been committed to the ledger.
 func issueCredit(contract *client.Contract, creditNumber string, issuer string, issueDateTime string) {
-	fmt.Printf("Submit Transaction: IssueCredit, creates new response credit with credit issuer, credit number and credit issueDateTime")
+	log.Println("Submit Transaction: IssueCredit, creates new response credit with credit issuer, credit number and credit issueDateTime.")
 
 	_, err := contract.SubmitTransaction("Issue", creditNumber, issuer, issueDateTime)
 	if err != nil {

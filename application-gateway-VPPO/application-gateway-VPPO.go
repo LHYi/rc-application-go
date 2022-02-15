@@ -117,7 +117,7 @@ func main() {
 		log.Println("-> Please enter the name of the network:")
 		networkName, _ = reader.ReadString('\n')
 		networkName = strings.Replace(networkName, "\n", "", -1)
-		log.Println("-> Please confirm your network name is:", networkName, "[y/n]")
+		fmt.Println("-> Please confirm your network name is:", networkName, "[y/n]")
 		networkNameConfirm, _ := reader.ReadString('\n')
 		networkNameConfirm = strings.Replace(networkNameConfirm, "\n", "", -1)
 		if strings.Compare(networkNameConfirm, "Y") == 0 || strings.Compare(networkNameConfirm, "y") == 0 {
@@ -134,7 +134,7 @@ func main() {
 		log.Println("-> Please enter the name of the contract:")
 		contractName, _ = reader.ReadString('\n')
 		contractName = strings.Replace(contractName, "\n", "", -1)
-		log.Println("-> Please confirm your contract name is:", contractName, "[y/n]")
+		fmt.Println("-> Please confirm your contract name is:", contractName, "[y/n]")
 		contractNameConfirm, _ := reader.ReadString('\n')
 		contractNameConfirm = strings.Replace(contractNameConfirm, "\n", "", -1)
 		if strings.Compare(contractNameConfirm, "Y") == 0 || strings.Compare(contractNameConfirm, "y") == 0 {
@@ -173,8 +173,28 @@ scfunctionloop:
 				issueConfirm, _ := reader.ReadString('\n')
 				issueConfirm = strings.Replace(issueConfirm, "\n", "", -1)
 				if strings.Compare(issueConfirm, "Y") == 0 || strings.Compare(issueConfirm, "y") == 0 {
-					// issueCredit(contract, creditNumber, issuer, issueDateTime)
+					issueCredit(contract, creditNumber, issuer, issueDateTime)
 					break issueloop
+				}
+			}
+		case "queryCredit":
+		queryloop:
+			for {
+				log.Println("============ Querying a credit ============")
+				fmt.Println("-> Please enter the credit number:")
+				creditNumber, _ := reader.ReadString('\n')
+				creditNumber = strings.Replace(creditNumber, "\n", "", -1)
+				fmt.Println("-> The credit number you entered is: " + creditNumber)
+				fmt.Println("-> Please enter the issuer:")
+				issuer, _ := reader.ReadString('\n')
+				issuer = strings.Replace(issuer, "\n", "", -1)
+				fmt.Println("-> The issuer you entered is: " + issuer)
+				fmt.Println("-> Are these input correct? [y/n]")
+				queryConfirm, _ := reader.ReadString('\n')
+				queryConfirm = strings.Replace(queryConfirm, "\n", "", -1)
+				if strings.Compare(queryConfirm, "Y") == 0 || strings.Compare(queryConfirm, "y") == 0 {
+					queryCredit(contract, creditNumber, issuer)
+					break queryloop
 				}
 			}
 		case "exit":
@@ -212,7 +232,7 @@ func issueCredit(contract *client.Contract, creditNumber string, issuer string, 
 	fmt.Printf("*** Transaction committed successfully\n")
 }
 
-func readCredirByID(contract *client.Contract, creditNumber string, issuer string) {
+func queryCredit(contract *client.Contract, creditNumber string, issuer string) {
 	fmt.Printf("Evaluate Transaction: QueryCredit, function returns credit attributes\n")
 
 	evaluateResult, err := contract.EvaluateTransaction("QueryCredit", issuer, creditNumber)

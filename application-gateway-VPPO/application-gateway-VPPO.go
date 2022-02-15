@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
@@ -29,10 +28,6 @@ const (
 	// chaincodeName = "basic"
 	// userName	  = "appUser"
 )
-
-// Using the timestamp as the assetID
-var now = time.Now()
-var assetId = fmt.Sprintf("asset%d", now.Unix()*1e3+int64(now.Nanosecond())/1e6)
 
 func main() {
 	log.Println("============ application-golang starts ============")

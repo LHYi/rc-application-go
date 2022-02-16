@@ -184,13 +184,13 @@ contractNameLoop:
 func invokeChaincode(contract *client.Contract, scfunction string) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("Occured and error while invoking chiancode function: %v...Recovered, please try again.\n", r)
+			fmt.Printf("Occured an error while invoking chiancode function: %v...Recovered, please try again.\n", r)
 		}
 	}()
 	switch scfunction {
 	case "instantiate":
 		instantiate(contract)
-	case "issueCredit":
+	case "issue":
 		log.Println("============ Issuing a new credit ============")
 	issueLoop:
 		for {
@@ -205,7 +205,7 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 			fmt.Println("-> The issue date and time you entered is: " + issueDateTime)
 		issueConfirmLoop:
 			for {
-				fmt.Printf("-> Are these input correct? [y/n]: ")
+				fmt.Printf("-> Are these inputs correct? [y/n]: ")
 				issueConfirm := catchOneInput()
 				if isYes(issueConfirm) {
 					issue(contract, creditNumber, issuer, issueDateTime)
@@ -218,7 +218,7 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 				}
 			}
 		}
-	case "queryCredit":
+	case "query":
 		log.Println("============ Querying a credit ============")
 	queryLoop:
 		for {
@@ -230,7 +230,7 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 			fmt.Println("-> The issuer you entered is: " + issuer)
 		queryConfirmLoop:
 			for {
-				fmt.Printf("-> Are these input correct? [y/n]: ")
+				fmt.Printf("-> Are these inputs correct? [y/n]: ")
 				queryConfirm := catchOneInput()
 				if isYes(queryConfirm) {
 					query(contract, creditNumber, issuer)

@@ -121,7 +121,7 @@ networkNameLoop:
 		networkName = catchOneInput()
 	networkNameConfirmLoop:
 		for {
-			fmt.Printf("-> Please confirm your network name is: %s, [y/n]", networkName)
+			fmt.Printf("-> Please confirm your network name is: %s, [y/n]: ", networkName)
 			networkNameConfirm := catchOneInput()
 			if isYes(networkNameConfirm) {
 				break networkNameLoop
@@ -145,7 +145,7 @@ contractNameLoop:
 		contractName = catchOneInput()
 	contractNameConfirmLoop:
 		for {
-			fmt.Printf("-> Please confirm your contract name is: %v, [y/n]", contractName)
+			fmt.Printf("-> Please confirm your contract name is: %v, [y/n]: ", contractName)
 			contractNameConfirm := catchOneInput()
 			if isYes(contractNameConfirm) {
 				break contractNameLoop
@@ -163,80 +163,89 @@ contractNameLoop:
 	for {
 		fmt.Println("-> Please enter the name of the smart contract function you want to invoke")
 		scfunction := catchOneInput()
-		// TODO: waiting to be changed accordingly
-		switch scfunction {
-		case "instantiate":
-			instantiate(contract)
-		case "issueCredit":
-			log.Println("============ Issuing a new credit ============")
-		issueLoop:
-			for {
-				fmt.Println("-> Please enter the credit number:")
-				creditNumber := catchOneInput()
-				fmt.Println("-> The credit number you entered is: " + creditNumber)
-				fmt.Println("-> Please enter the issuer:")
-				issuer := catchOneInput()
-				fmt.Println("-> The issuer you entered is: " + issuer)
-				fmt.Println("-> Please enter the issue date and time:")
-				issueDateTime := catchOneInput()
-				fmt.Println("-> The issue date and time you entered is: " + issueDateTime)
-			issueConfirmLoop:
-				for {
-					fmt.Printf("-> Are these input correct? [y/n]")
-					issueConfirm := catchOneInput()
-					if isYes(issueConfirm) {
-						defer func() {
-							if r := recover(); r != nil {
-								fmt.Println("Occured and error while invoking chiancode function:", r, ".Recovered, please try again.")
-							}
-						}()
-						issueCredit(contract, creditNumber, issuer, issueDateTime)
-						break issueLoop
-					} else if isNo(issueConfirm) {
-						fmt.Println("-> Please enter the details of the credit to issue again.")
-						break issueConfirmLoop
-					} else {
-						fmt.Println("Wrong input! Please try again.")
-					}
-				}
+		invokeChaincode(contract, scfunction)
+	scContinueConfirmLoop:
+		for {
+			fmt.Print("Do you want to continue? [y/n]: ")
+			continueConfirm := catchOneInput()
+			if isYes(continueConfirm) {
+				fmt.Println("trying to continue")
+				break scContinueConfirmLoop
+			} else if isNo(continueConfirm) {
+				exitApp()
+			} else {
+				fmt.Println("Cannot recognize your input, please try again")
+				continue scContinueConfirmLoop
 			}
-		case "queryCredit":
-			log.Println("============ Querying a credit ============")
-		queryLoop:
-			for {
-				fmt.Println("-> Please enter the credit number:")
-				creditNumber := catchOneInput()
-				fmt.Println("-> The credit number you entered is: " + creditNumber)
-				fmt.Println("-> Please enter the issuer:")
-				issuer := catchOneInput()
-				fmt.Println("-> The issuer you entered is: " + issuer)
-			queryConfirmLoop:
-				for {
-					fmt.Printf("-> Are these input correct? [y/n]")
-					queryConfirm := catchOneInput()
-					if isYes(queryConfirm) {
-						defer func() {
-							if r := recover(); r != nil {
-								fmt.Println("Occured and error while invoking chiancode function:", r, ".Recovered, please try again.")
-							}
-						}()
-						queryCredit(contract, creditNumber, issuer)
-						break queryLoop
-					} else if isNo(queryConfirm) {
-						fmt.Println("-> Please enter the details of the credit to query again.")
-						break queryConfirmLoop
-					} else {
-						fmt.Println("Wrong input! Please try again.")
-					}
-				}
-			}
-		default:
-			fmt.Println("Wrong input! Please try again!")
-
 		}
 	}
+}
 
-	log.Println("============ application-golang ends ============")
+func invokeChaincode(contract *client.Contract, scfunction string) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Occured and error while invoking chiancode function: %v...Recovered, please try again.\n", r)
+		}
+	}()
+	switch scfunction {
+	case "instantiate":
+		instantiate(contract)
+	case "issueCredit":
+		log.Println("============ Issuing a new credit ============")
+	issueLoop:
+		for {
+			fmt.Println("-> Please enter the credit number:")
+			creditNumber := catchOneInput()
+			fmt.Println("-> The credit number you entered is: " + creditNumber)
+			fmt.Println("-> Please enter the issuer:")
+			issuer := catchOneInput()
+			fmt.Println("-> The issuer you entered is: " + issuer)
+			fmt.Println("-> Please enter the issue date and time:")
+			issueDateTime := catchOneInput()
+			fmt.Println("-> The issue date and time you entered is: " + issueDateTime)
+		issueConfirmLoop:
+			for {
+				fmt.Printf("-> Are these input correct? [y/n]: ")
+				issueConfirm := catchOneInput()
+				if isYes(issueConfirm) {
+					issueCredit(contract, creditNumber, issuer, issueDateTime)
+					break issueLoop
+				} else if isNo(issueConfirm) {
+					fmt.Println("-> Please enter the details of the credit to issue again.")
+					break issueConfirmLoop
+				} else {
+					fmt.Println("Wrong input! Please try again.")
+				}
+			}
+		}
+	case "queryCredit":
+		log.Println("============ Querying a credit ============")
+	queryLoop:
+		for {
+			fmt.Println("-> Please enter the credit number:")
+			creditNumber := catchOneInput()
+			fmt.Println("-> The credit number you entered is: " + creditNumber)
+			fmt.Println("-> Please enter the issuer:")
+			issuer := catchOneInput()
+			fmt.Println("-> The issuer you entered is: " + issuer)
+		queryConfirmLoop:
+			for {
+				fmt.Printf("-> Are these input correct? [y/n]: ")
+				queryConfirm := catchOneInput()
+				if isYes(queryConfirm) {
+					queryCredit(contract, creditNumber, issuer)
+					break queryLoop
+				} else if isNo(queryConfirm) {
+					fmt.Println("-> Please enter the details of the credit to query again.")
+					break queryConfirmLoop
+				} else {
+					fmt.Println("Wrong input! Please try again.")
+				}
+			}
+		}
+	default:
+		fmt.Println("Wrong input! Please try again!")
+	}
 }
 
 func instantiate(contract *client.Contract) {

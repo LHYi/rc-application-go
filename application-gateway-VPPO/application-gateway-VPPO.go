@@ -160,7 +160,6 @@ contractNameLoop:
 	contract := network.GetContract(contractName)
 	log.Println("============ successfully got contract", contractName, "============")
 
-scfunctionloop:
 	for {
 		fmt.Println("-> Please enter the name of the smart contract function you want to invoke")
 		scfunction := catchOneInput()
@@ -183,7 +182,7 @@ scfunctionloop:
 				fmt.Println("-> The issue date and time you entered is: " + issueDateTime)
 			issueConfirmLoop:
 				for {
-					fmt.Println("-> Are these input correct? [y/n]")
+					fmt.Printf("-> Are these input correct? [y/n]")
 					issueConfirm := catchOneInput()
 					if isYes(issueConfirm) {
 						defer func() {
@@ -213,7 +212,7 @@ scfunctionloop:
 				fmt.Println("-> The issuer you entered is: " + issuer)
 			queryConfirmLoop:
 				for {
-					fmt.Println("-> Are these input correct? [y/n]")
+					fmt.Printf("-> Are these input correct? [y/n]")
 					queryConfirm := catchOneInput()
 					if isYes(queryConfirm) {
 						defer func() {
@@ -231,8 +230,6 @@ scfunctionloop:
 					}
 				}
 			}
-		case "exit":
-			break scfunctionloop
 		default:
 			fmt.Println("Wrong input! Please try again!")
 
@@ -380,6 +377,6 @@ func catchOneInput() string {
 
 // exit application
 func exitApp() {
-	log.Println("-> Exiting application")
+	log.Println("============ application-golang ends ============")
 	os.Exit(0)
 }

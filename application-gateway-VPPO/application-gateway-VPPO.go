@@ -36,10 +36,10 @@ var creditNumber = fmt.Sprintf("asset%d", now.Unix()*1e3+int64(now.Nanosecond())
 
 func main() {
 	log.Println("============ application-golang starts ============")
+	log.Println("============ The application will end when you enter exit ============")
 	//! DISCOVERY_AS_LOCALHOST should be set to "false" if the network is deployed on other computers
 	for {
 		log.Println("============ setting DISCOVERY_AS_LOCALHOST ============")
-		log.Println("============ The application will end when you enter exit ============")
 		fmt.Print("-> Do you want to set DISCOVERY_AS_LOCALHOST to true? [y/n]: ")
 		DAL := catchOneInput()
 		if isNo(DAL) {
@@ -371,10 +371,11 @@ func isExit(s string) bool {
 func catchOneInput() string {
 	reader := bufio.NewReader(os.Stdin)
 	s, _ := reader.ReadString('\n')
+	s = strings.Replace(s, "\n", "", -1)
 	if isExit(s) {
 		exitApp()
 	}
-	return strings.Replace(s, "\n", "", -1)
+	return s
 }
 
 // exit application

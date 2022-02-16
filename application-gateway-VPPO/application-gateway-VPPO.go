@@ -36,15 +36,13 @@ var creditNumber = fmt.Sprintf("asset%d", now.Unix()*1e3+int64(now.Nanosecond())
 
 func main() {
 	log.Println("============ application-golang starts ============")
-
-	reader := bufio.NewReader(os.Stdin)
 	//! DISCOVERY_AS_LOCALHOST should be set to "false" if the network is deployed on other computers
 	for {
 		log.Println("============ setting DISCOVERY_AS_LOCALHOST ============")
+		log.Println("============ The application will end when you enter exit ============")
 		fmt.Print("-> Do you want to set DISCOVERY_AS_LOCALHOST to true? [y/n]: ")
-		DAL, _ := reader.ReadString('\n')
-		DAL = strings.Replace(DAL, "\n", "", -1)
-		if strings.Compare(DAL, "N") == 0 || strings.Compare(DAL, "n") == 0 {
+		DAL := catchOneInput()
+		if isNo(DAL) {
 			log.Println("-> Setting DISCOVERY_AS_LOCALHOST to false")
 			err := os.Setenv("DISCOVERY_AS_LOCALHOST", "false")
 			if err != nil {
@@ -53,7 +51,7 @@ func main() {
 			}
 			log.Println("-> Success")
 			break
-		} else if strings.Compare(DAL, "Y") == 0 || strings.Compare(DAL, "y") == 0 {
+		} else if isYes(DAL) {
 			log.Println("-> Setting DISCOVERY_AS_LOCALHOST to true")
 			err := os.Setenv("DISCOVERY_AS_LOCALHOST", "true")
 			if err != nil {
@@ -62,27 +60,31 @@ func main() {
 			}
 			log.Println("-> Success")
 			break
-		} else if strings.Compare(DAL, "exit") == 0 {
-			log.Println("-> Exiting application")
-			os.Exit(0)
 		} else {
 			log.Println("-> Wrong input, please try again or input exit")
 		}
 	}
 
+	log.Println("============ trying to connect to gateway ============")
 	var userName string
+userNameLoop:
 	for {
-		log.Println("============ trying to connect to gateway ============")
 		log.Println("-> Please enter your username:")
-		userName, _ = reader.ReadString('\n')
-		userName = strings.Replace(userName, "\n", "", -1)
-		fmt.Printf("-> Please confirm your username is %v, [y/n]: ", userName)
-		userNameConfirm, _ := reader.ReadString('\n')
-		userNameConfirm = strings.Replace(userNameConfirm, "\n", "", -1)
-		if strings.Compare(userNameConfirm, "Y") == 0 || strings.Compare(userNameConfirm, "y") == 0 {
-			break
+		userName = catchOneInput()
+	userNameConfirmLoop:
+		for {
+			fmt.Printf("-> Please confirm your username is %s, [y/n]: ", userName)
+			userNameConfirm := catchOneInput()
+			if isYes(userNameConfirm) {
+				break userNameLoop
+			} else if isNo(userNameConfirm) {
+				break userNameConfirmLoop
+			} else {
+				fmt.Println("Wrong input! Please try again.")
+			}
 		}
 	}
+	log.Printf("-> Your username is %s.", userName)
 
 	log.Println("============ enrolling user", userName, "============")
 	// The gRPC client connection should be shared by all Gateway connections to this endpoint
@@ -113,88 +115,120 @@ func main() {
 
 	var networkName string
 	log.Println("============ connecting to network ============")
+networkNameLoop:
 	for {
 		log.Println("-> Please enter the name of the network:")
-		networkName, _ = reader.ReadString('\n')
-		networkName = strings.Replace(networkName, "\n", "", -1)
-		fmt.Printf("-> Please confirm your network name is: %v, [y/n]", networkName)
-		networkNameConfirm, _ := reader.ReadString('\n')
-		networkNameConfirm = strings.Replace(networkNameConfirm, "\n", "", -1)
-		if strings.Compare(networkNameConfirm, "Y") == 0 || strings.Compare(networkNameConfirm, "y") == 0 {
-			break
+		networkName = catchOneInput()
+	networkNameConfirmLoop:
+		for {
+			fmt.Printf("-> Please confirm your network name is: %s, [y/n]", networkName)
+			networkNameConfirm := catchOneInput()
+			if isYes(networkNameConfirm) {
+				break networkNameLoop
+			} else if isNo(networkNameConfirm) {
+				break networkNameConfirmLoop
+			} else {
+				fmt.Println("Wrong input! Please try again.")
+			}
 		}
 	}
+	log.Printf("-> Your network name is %s.", networkName)
 
 	network := gateway.GetNetwork(networkName)
-	log.Println("-> successfully connected to network", networkName)
+	log.Println("============ successfully connected to network", networkName, "============")
 
 	var contractName string
 	log.Println("============ getting contract ============")
+contractNameLoop:
 	for {
 		log.Println("-> Please enter the name of the contract:")
-		contractName, _ = reader.ReadString('\n')
-		contractName = strings.Replace(contractName, "\n", "", -1)
-		fmt.Printf("-> Please confirm your contract name is: %v, [y/n]", contractName)
-		contractNameConfirm, _ := reader.ReadString('\n')
-		contractNameConfirm = strings.Replace(contractNameConfirm, "\n", "", -1)
-		if strings.Compare(contractNameConfirm, "Y") == 0 || strings.Compare(contractNameConfirm, "y") == 0 {
-			break
+		contractName = catchOneInput()
+	contractNameConfirmLoop:
+		for {
+			fmt.Printf("-> Please confirm your contract name is: %v, [y/n]", contractName)
+			contractNameConfirm := catchOneInput()
+			if isYes(contractNameConfirm) {
+				break contractNameLoop
+			} else if isNo(contractNameConfirm) {
+				break contractNameConfirmLoop
+			} else {
+				fmt.Println("Wrong input! Please try again.")
+			}
 		}
 	}
+	log.Printf("-> Your contract name is %s.", contractName)
 	contract := network.GetContract(contractName)
-	log.Printf("-> successfully got contract %s", contractName)
+	log.Println("============ successfully got contract", contractName, "============")
 
 scfunctionloop:
 	for {
 		fmt.Println("-> Please enter the name of the smart contract function you want to invoke")
-		scfunction, _ := reader.ReadString('\n')
-		scfunction = strings.Replace(scfunction, "\n", "", -1)
+		scfunction := catchOneInput()
 		// TODO: waiting to be changed accordingly
 		switch scfunction {
 		case "instantiate":
 			instantiate(contract)
 		case "issueCredit":
-		issueloop:
+			log.Println("============ Issuing a new credit ============")
+		issueLoop:
 			for {
-				log.Println("============ Issuing a new credit ============")
 				fmt.Println("-> Please enter the credit number:")
-				creditNumber, _ := reader.ReadString('\n')
-				creditNumber = strings.Replace(creditNumber, "\n", "", -1)
+				creditNumber := catchOneInput()
 				fmt.Println("-> The credit number you entered is: " + creditNumber)
 				fmt.Println("-> Please enter the issuer:")
-				issuer, _ := reader.ReadString('\n')
-				issuer = strings.Replace(issuer, "\n", "", -1)
+				issuer := catchOneInput()
 				fmt.Println("-> The issuer you entered is: " + issuer)
 				fmt.Println("-> Please enter the issue date and time:")
-				issueDateTime, _ := reader.ReadString('\n')
-				issueDateTime = strings.Replace(issueDateTime, "\n", "", -1)
+				issueDateTime := catchOneInput()
 				fmt.Println("-> The issue date and time you entered is: " + issueDateTime)
-				fmt.Println("-> Are these input correct? [y/n]")
-				issueConfirm, _ := reader.ReadString('\n')
-				issueConfirm = strings.Replace(issueConfirm, "\n", "", -1)
-				if strings.Compare(issueConfirm, "Y") == 0 || strings.Compare(issueConfirm, "y") == 0 {
-					issueCredit(contract, creditNumber, issuer, issueDateTime)
-					break issueloop
+			issueConfirmLoop:
+				for {
+					fmt.Println("-> Are these input correct? [y/n]")
+					issueConfirm := catchOneInput()
+					if isYes(issueConfirm) {
+						defer func() {
+							if r := recover(); r != nil {
+								fmt.Println("Occured and error while invoking chiancode function:", r, ".Recovered, please try again.")
+							}
+						}()
+						issueCredit(contract, creditNumber, issuer, issueDateTime)
+						break issueLoop
+					} else if isNo(issueConfirm) {
+						fmt.Println("-> Please enter the details of the credit to issue again.")
+						break issueConfirmLoop
+					} else {
+						fmt.Println("Wrong input! Please try again.")
+					}
 				}
 			}
 		case "queryCredit":
-		queryloop:
+			log.Println("============ Querying a credit ============")
+		queryLoop:
 			for {
-				log.Println("============ Querying a credit ============")
 				fmt.Println("-> Please enter the credit number:")
-				creditNumber, _ := reader.ReadString('\n')
-				creditNumber = strings.Replace(creditNumber, "\n", "", -1)
+				creditNumber := catchOneInput()
 				fmt.Println("-> The credit number you entered is: " + creditNumber)
 				fmt.Println("-> Please enter the issuer:")
-				issuer, _ := reader.ReadString('\n')
-				issuer = strings.Replace(issuer, "\n", "", -1)
+				issuer := catchOneInput()
 				fmt.Println("-> The issuer you entered is: " + issuer)
-				fmt.Println("-> Are these input correct? [y/n]")
-				queryConfirm, _ := reader.ReadString('\n')
-				queryConfirm = strings.Replace(queryConfirm, "\n", "", -1)
-				if strings.Compare(queryConfirm, "Y") == 0 || strings.Compare(queryConfirm, "y") == 0 {
-					queryCredit(contract, creditNumber, issuer)
-					break queryloop
+			queryConfirmLoop:
+				for {
+					fmt.Println("-> Are these input correct? [y/n]")
+					queryConfirm := catchOneInput()
+					if isYes(queryConfirm) {
+						defer func() {
+							if r := recover(); r != nil {
+								fmt.Println("Occured and error while invoking chiancode function:", r, ".Recovered, please try again.")
+							}
+						}()
+						queryCredit(contract, creditNumber, issuer)
+						break queryLoop
+					} else if isNo(queryConfirm) {
+						fmt.Println("-> Please enter the details of the credit to query again.")
+						break queryConfirmLoop
+					} else {
+						fmt.Println("Wrong input! Please try again.")
+					}
 				}
 			}
 		case "exit":
@@ -311,11 +345,40 @@ func newSign() identity.Sign {
 	return sign
 }
 
-//Format JSON data
+// Format JSON data
 func formatJSON(data []byte) string {
 	var prettyJSON bytes.Buffer
 	if err := json.Indent(&prettyJSON, data, " ", ""); err != nil {
 		panic(fmt.Errorf("failed to parse JSON: %w", err))
 	}
 	return prettyJSON.String()
+}
+
+// returns the confirmation
+func isYes(s string) bool {
+	return strings.Compare(s, "Y") == 0 || strings.Compare(s, "y") == 0 || strings.Compare(s, "Yes") == 0 || strings.Compare(s, "yes") == 0
+}
+
+func isNo(s string) bool {
+	return strings.Compare(s, "N") == 0 || strings.Compare(s, "n") == 0 || strings.Compare(s, "No") == 0 || strings.Compare(s, "no") == 0
+}
+
+func isExit(s string) bool {
+	return strings.Compare(s, "Exit") == 0 || strings.Compare(s, "exit") == 0 || strings.Compare(s, "EXIT") == 0
+}
+
+// catch console input once
+func catchOneInput() string {
+	reader := bufio.NewReader(os.Stdin)
+	s, _ := reader.ReadString('\n')
+	if isExit(s) {
+		exitApp()
+	}
+	return strings.Replace(s, "\n", "", -1)
+}
+
+// exit application
+func exitApp() {
+	log.Println("-> Exiting application")
+	os.Exit(0)
 }

@@ -208,7 +208,7 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 				fmt.Printf("-> Are these input correct? [y/n]: ")
 				issueConfirm := catchOneInput()
 				if isYes(issueConfirm) {
-					issueCredit(contract, creditNumber, issuer, issueDateTime)
+					issue(contract, creditNumber, issuer, issueDateTime)
 					break issueLoop
 				} else if isNo(issueConfirm) {
 					fmt.Println("-> Please enter the details of the credit to issue again.")
@@ -233,7 +233,7 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 				fmt.Printf("-> Are these input correct? [y/n]: ")
 				queryConfirm := catchOneInput()
 				if isYes(queryConfirm) {
-					queryCredit(contract, creditNumber, issuer)
+					query(contract, creditNumber, issuer)
 					break queryLoop
 				} else if isNo(queryConfirm) {
 					fmt.Println("-> Please enter the details of the credit to query again.")
@@ -261,7 +261,7 @@ func instantiate(contract *client.Contract) {
 
 // Issuing a new response credit
 // Submit a transaction synchronously, blocking until it has been committed to the ledger.
-func issueCredit(contract *client.Contract, creditNumber string, issuer string, issueDateTime string) {
+func issue(contract *client.Contract, creditNumber string, issuer string, issueDateTime string) {
 	log.Println("Submit Transaction: IssueCredit, creates new response credit with credit issuer, credit number and credit issueDateTime.")
 
 	_, err := contract.SubmitTransaction("Issue", creditNumber, issuer, issueDateTime)
@@ -272,7 +272,7 @@ func issueCredit(contract *client.Contract, creditNumber string, issuer string, 
 	fmt.Printf("*** Transaction committed successfully\n")
 }
 
-func queryCredit(contract *client.Contract, creditNumber string, issuer string) {
+func query(contract *client.Contract, creditNumber string, issuer string) {
 	fmt.Printf("Evaluate Transaction: QueryCredit, function returns credit attributes\n")
 
 	evaluateResult, err := contract.EvaluateTransaction("Query", creditNumber, issuer)

@@ -161,7 +161,7 @@ contractNameLoop:
 	log.Println("============ successfully got contract", contractName, "============")
 
 	for {
-		fmt.Println("-> Please enter the name of the smart contract function you want to invoke")
+		fmt.Println("-> Please enter the name of the smart contract function you want to invoke:")
 		scfunction := catchOneInput()
 		invokeChaincode(contract, scfunction)
 	scContinueConfirmLoop:
@@ -169,12 +169,12 @@ contractNameLoop:
 			fmt.Print("Do you want to continue? [y/n]: ")
 			continueConfirm := catchOneInput()
 			if isYes(continueConfirm) {
-				fmt.Println("trying to continue")
+				fmt.Println("Preparing for invoking next smart contract function")
 				break scContinueConfirmLoop
 			} else if isNo(continueConfirm) {
 				exitApp()
 			} else {
-				fmt.Println("Cannot recognize your input, please try again")
+				fmt.Println("Wrong input! Please try again.")
 				continue scContinueConfirmLoop
 			}
 		}

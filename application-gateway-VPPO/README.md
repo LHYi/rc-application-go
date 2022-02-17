@@ -1,1 +1,0 @@
-# application-gateway-VPPO

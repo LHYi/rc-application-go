@@ -161,7 +161,7 @@ contractNameLoop:
 	log.Println("============ successfully got contract", contractName, "============")
 
 	for {
-		fmt.Println("-> Please enter the name of the smart contract function you want to invoke:")
+		fmt.Println("-> Please enter the name of the smart contract function you want to invoke, enter help to print the functions available")
 		scfunction := catchOneInput()
 		invokeChaincode(contract, scfunction)
 	scContinueConfirmLoop:
@@ -188,9 +188,9 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 		}
 	}()
 	switch scfunction {
-	case "instantiate":
+	case "instantiate", "Instantiate", "INSTANTIATE":
 		instantiate(contract)
-	case "issue":
+	case "issue", "Issue", "ISSUE":
 		log.Println("============ Issuing a new credit ============")
 	issueLoop:
 		for {
@@ -218,7 +218,7 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 				}
 			}
 		}
-	case "query":
+	case "query", "Query", "QUERY":
 		log.Println("============ Querying a credit ============")
 	queryLoop:
 		for {
@@ -243,6 +243,8 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 				}
 			}
 		}
+	case "help", "HELP", "Help", "":
+		listFuncs()
 	default:
 		fmt.Println("Wrong input! Please try again!")
 	}
@@ -388,4 +390,27 @@ func catchOneInput() string {
 func exitApp() {
 	log.Println("============ application-golang ends ============")
 	os.Exit(0)
+}
+
+func listFuncs() {
+	listOfFunc := []byte(`{
+		"list": [{"Discription":"List out all the functions that can be called and the arguments required."}],
+		"issue": [
+			{"Discription":"The issue function collects the information of a new credit and submit a transaction proposal to the blockchain network to issue a new credit.",
+			"Arguments": [
+				{"credit number":"Credit number is the unique ID number of a credit.",
+				"issuer":"Issuer is the unique identity of the entity which issues this credit.",
+				"issue date and time":"The date and time when the credit is issued."}
+			]}
+		],
+		"query": [
+			{"Discription":"The query function collects the information of an existing credit and submit a evaluation proposal to the world state to query the details of that credit.",
+			"Arguments": [
+				{"credit number":"Credit number is the unique ID number of a credit.",
+				"issuer":"Issuer is the unique identity of the entity which issues this credit."}
+			]}
+		]
+	}`)
+	// printFuncs := formatJSON(listOfFunc)
+	fmt.Printf(string(listOfFunc))
 }

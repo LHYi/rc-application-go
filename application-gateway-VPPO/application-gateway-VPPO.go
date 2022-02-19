@@ -20,20 +20,24 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// these address should be changed accordingly when implemented in the hardware
 const (
+	// the mspID should be identical to the one used when calling cryptogen to generate credential files
 	// mspID         = "Org1MSP"
-	cryptoPath   = "../../fabric-samples/test-network/organizations/peerOrganizations/org1.example.com"
-	certPath     = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem"
-	keyPath      = cryptoPath + "/users/User1@org1.example.com/msp/keystore/"
-	tlsCertPath  = cryptoPath + "/peers/peer0.org1.example.com/tls/ca.crt"
+	// the path of the certificates
+	cryptoPath  = "../../fabric-samples/test-network/organizations/peerOrganizations/org1.example.com"
+	certPath    = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem"
+	keyPath     = cryptoPath + "/users/User1@org1.example.com/msp/keystore/"
+	tlsCertPath = cryptoPath + "/peers/peer0.org1.example.com/tls/ca.crt"
+	// an IP address to access the peer node, it is a localhost address when the network is running in a single machine
 	peerEndpoint = "localhost:7051"
-	gatewayPeer  = "peer0.org1.example.com"
+	// name of the peer node
+	gatewayPeer = "peer0.org1.example.com"
+	// the channel name and the chaincode name should be identical to the ones used in blockchain network implementation, the following are the default values
+	// these information have been designed to be entered by the application user
 	// channelName   = "mychannel"
 	// chaincodeName = "basic"
 )
-
-var now = time.Now()
-var creditNumber = fmt.Sprintf("asset%d", now.Unix()*1e3+int64(now.Nanosecond())/1e6)
 
 func main() {
 	log.Println("============ application-golang starts ============")
@@ -81,7 +85,7 @@ userNameLoop:
 			} else if isNo(userNameConfirm) {
 				break userNameConfirmLoop
 			} else {
-				fmt.Println("Wrong input! Please try again.")
+				fmt.Println("->Wrong input! Please try again.")
 			}
 		}
 	}
@@ -129,7 +133,7 @@ networkNameLoop:
 			} else if isNo(networkNameConfirm) {
 				break networkNameConfirmLoop
 			} else {
-				fmt.Println("Wrong input! Please try again.")
+				fmt.Println("->Wrong input! Please try again.")
 			}
 		}
 	}
@@ -153,7 +157,7 @@ contractNameLoop:
 			} else if isNo(contractNameConfirm) {
 				break contractNameConfirmLoop
 			} else {
-				fmt.Println("Wrong input! Please try again.")
+				fmt.Println("->Wrong input! Please try again.")
 			}
 		}
 	}
@@ -164,7 +168,7 @@ contractNameLoop:
 	for {
 		fmt.Println("-> Please enter the name of the smart contract function you want to invoke, enter help to print the functions available")
 		scfunction := catchOneInput()
-		invokeChaincode(contract, scfunction)
+		invokeChaincode(contract, scfunction, userName)
 	scContinueConfirmLoop:
 		for {
 			fmt.Print("Do you want to continue? [y/n]: ")
@@ -175,14 +179,14 @@ contractNameLoop:
 			} else if isNo(continueConfirm) {
 				exitApp()
 			} else {
-				fmt.Println("Wrong input! Please try again.")
+				fmt.Println("->Wrong input! Please try again.")
 				continue scContinueConfirmLoop
 			}
 		}
 	}
 }
 
-func invokeChaincode(contract *client.Contract, scfunction string) {
+func invokeChaincode(contract *client.Contract, scfunction string, userName string) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("Occured an error while invoking chiancode function: %v...Recovered, please try again.\n", r)
@@ -195,15 +199,63 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 		log.Println("============ Issuing a new credit ============")
 	issueLoop:
 		for {
-			fmt.Println("-> Please enter the credit number:")
-			creditNumber := catchOneInput()
-			fmt.Println("-> The credit number you entered is: " + creditNumber)
-			fmt.Println("-> Please enter the issuer:")
-			issuer := catchOneInput()
-			fmt.Println("-> The issuer you entered is: " + issuer)
-			fmt.Println("-> Please enter the issue date and time:")
-			issueDateTime := catchOneInput()
-			fmt.Println("-> The issue date and time you entered is: " + issueDateTime)
+			var creditNumber string
+		enterCreditNumberLoop:
+			for {
+				fmt.Println("-> Do you want to assign a specific credit number? [y/n]: ")
+				enterConfirm := catchOneInput()
+				if isYes(enterConfirm) {
+					fmt.Println("-> Please enter the credit number:")
+					creditNumber = catchOneInput()
+					fmt.Println("-> The credit number you entered is: " + creditNumber)
+					break enterCreditNumberLoop
+				} else if isNo(enterConfirm) {
+					fmt.Println("-> Generating credit number.")
+					creditNumber = generateCreditNumber()
+					fmt.Println("-> The credit number automatically generated is: " + creditNumber)
+					break enterCreditNumberLoop
+				} else {
+					fmt.Println("->Wrong input! Please try again.")
+				}
+			}
+			var issuer string
+		enterIssuerLoop:
+			for {
+				fmt.Println("-> Do you want to use your username as issuer? [y/n]: ")
+				enterConfirm := catchOneInput()
+				if isYes(enterConfirm) {
+					fmt.Println("-> Using your username as the issuer")
+					issuer = userName
+					fmt.Println("-> The issuer is: " + userName)
+					break enterIssuerLoop
+				} else if isNo(enterConfirm) {
+					fmt.Println("-> Please enter the issuer: ")
+					issuer = catchOneInput()
+					fmt.Println("-> The issuer you entered is: " + issuer)
+					break enterIssuerLoop
+				} else {
+					fmt.Println("->Wrong input! Please try again.")
+				}
+			}
+			var issueDateTime string
+		enterCreditDateTimeLoop:
+			for {
+				fmt.Println("-> Do you want to generate the issue date and time of the credit automatically? [y/n]: ")
+				enterConfirm := catchOneInput()
+				if isYes(enterConfirm) {
+					fmt.Println("-> Getting date and time.")
+					issueDateTime = generateCreditDateTime()
+					fmt.Println("-> The date and time is: " + issueDateTime)
+					break enterCreditDateTimeLoop
+				} else if isNo(enterConfirm) {
+					fmt.Println("-> Please enter the issue date and time:")
+					issueDateTime = catchOneInput()
+					fmt.Println("-> The issue date and time you entered is: " + issueDateTime)
+					break enterCreditDateTimeLoop
+				} else {
+					fmt.Println("->Wrong input! Please try again.")
+				}
+			}
 		issueConfirmLoop:
 			for {
 				fmt.Printf("-> Are these inputs correct? [y/n]: ")
@@ -215,7 +267,7 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 					fmt.Println("-> Please enter the details of the credit to issue again.")
 					break issueConfirmLoop
 				} else {
-					fmt.Println("Wrong input! Please try again.")
+					fmt.Println("->Wrong input! Please try again.")
 				}
 			}
 		}
@@ -240,14 +292,14 @@ func invokeChaincode(contract *client.Contract, scfunction string) {
 					fmt.Println("-> Please enter the details of the credit to query again.")
 					break queryConfirmLoop
 				} else {
-					fmt.Println("Wrong input! Please try again.")
+					fmt.Println("->Wrong input! Please try again.")
 				}
 			}
 		}
 	case "help", "HELP", "Help", "":
 		listFuncs()
 	default:
-		fmt.Println("Wrong input! Please try again!")
+		fmt.Println("->Wrong input! Please try again!")
 	}
 }
 
@@ -412,4 +464,16 @@ func listFuncs() {
 		{"", "", "issuer", "Issuer is the unique identity of the entity which issues this credit."},
 	})
 	tof.Render()
+}
+
+func generateCreditNumber() string {
+	var now = time.Now()
+	creditNumber := []string{"Credit", fmt.Sprint(now.Unix()*1e3 + int64(now.Nanosecond())/1e6)}
+	return strings.Join(creditNumber, "-")
+}
+
+func generateCreditDateTime() string {
+	var now = time.Now()
+	creditNumber := []string{"", fmt.Sprint(now.Unix()*1e3 + int64(now.Nanosecond())/1e6)}
+	return strings.Join(creditNumber, "")
 }

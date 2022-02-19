@@ -15,6 +15,7 @@ import (
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 	"github.com/hyperledger/fabric-gateway/pkg/identity"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -393,24 +394,22 @@ func exitApp() {
 }
 
 func listFuncs() {
-	listOfFunc := []byte(`{
-		"list": [{"Discription":"List out all the functions that can be called and the arguments required."}],
-		"issue": [
-			{"Discription":"The issue function collects the information of a new credit and submit a transaction proposal to the blockchain network to issue a new credit.",
-			"Arguments": [
-				{"credit number":"Credit number is the unique ID number of a credit.",
-				"issuer":"Issuer is the unique identity of the entity which issues this credit.",
-				"issue date and time":"The date and time when the credit is issued."}
-			]}
-		],
-		"query": [
-			{"Discription":"The query function collects the information of an existing credit and submit a evaluation proposal to the world state to query the details of that credit.",
-			"Arguments": [
-				{"credit number":"Credit number is the unique ID number of a credit.",
-				"issuer":"Issuer is the unique identity of the entity which issues this credit."}
-			]}
-		]
-	}`)
-	// printFuncs := formatJSON(listOfFunc)
-	fmt.Printf(string(listOfFunc))
+	tof := table.NewWriter()
+	tof.SetOutputMirror(os.Stdout)
+	tof.AppendHeader(table.Row{"Commend", "Function discription", "Arguments", "Argument discription"})
+	tof.AppendRows([]table.Row{
+		{"list", "List out all the functions that can be called and the arguments required.", "", ""},
+	})
+	tof.AppendSeparator()
+	tof.AppendRows([]table.Row{
+		{"issue", "The issue function collects the information of a new credit and submit a transaction proposal to the blockchain network to issue a new credit.", "credit number", "Credit number is the unique ID number of a credit."},
+		{"", "", "issuer", "Issuer is the unique identity of the entity which issues this credit."},
+		{"", "", "issue date and time", "The date and time when the credit is issued."},
+	})
+	tof.AppendSeparator()
+	tof.AppendRows([]table.Row{
+		{"query", "The query function collects the information of an existing credit and submit a evaluation proposal to the world state to query the details of that credit.", "credit number", "Credit number is the unique ID number of a credit."},
+		{"", "", "issuer", "Issuer is the unique identity of the entity which issues this credit."},
+	})
+	tof.Render()
 }

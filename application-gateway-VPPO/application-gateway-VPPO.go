@@ -42,16 +42,19 @@ const (
 func main() {
 	log.Println("============ application-golang starts ============")
 	log.Println("============ The application will end when you enter exit ============")
-	//! DISCOVERY_AS_LOCALHOST should be set to "false" if the network is deployed on other computers
+	// DISCOVERY_AS_LOCALHOST should be set to "false" if the network is deployed on other computers
 	for {
 		log.Println("============ setting DISCOVERY_AS_LOCALHOST ============")
 		fmt.Print("-> Do you want to set DISCOVERY_AS_LOCALHOST to true? [y/n]: ")
+		// catchOneInput() catches one line of the terminal input, see more details in function definition
 		DAL := catchOneInput()
+		// determining whether DAL is yes or no and conduct corresponding operations
 		if isNo(DAL) {
 			log.Println("-> Setting DISCOVERY_AS_LOCALHOST to false")
 			err := os.Setenv("DISCOVERY_AS_LOCALHOST", "false")
 			if err != nil {
 				log.Fatalf("Error setting DISCOVERY_AS_LOCALHOST environemnt variable: %v", err)
+				// an exit code that is nonzero indicates that there exist an error
 				os.Exit(1)
 			}
 			log.Println("-> Success")
@@ -69,15 +72,19 @@ func main() {
 			log.Println("-> Wrong input, please try again or input exit")
 		}
 	}
-
+	// set up a gateway connection to access the blockchain network
 	log.Println("============ trying to connect to gateway ============")
+	// define the variable outside the loop so that it can be used in the following connection configuration
 	var userName string
+	// label of the code block is useful when the process of running the code is relatec to the user's selection
+	// labels are only used with goto, continue and break
 userNameLoop:
 	for {
 		log.Println("-> Please enter your username:")
 		userName = catchOneInput()
 	userNameConfirmLoop:
 		for {
+			// formatted output, %s prints out the value of a string
 			fmt.Printf("-> Please confirm your username is %s, [y/n]: ", userName)
 			userNameConfirm := catchOneInput()
 			if isYes(userNameConfirm) {
@@ -95,7 +102,7 @@ userNameLoop:
 	// The gRPC client connection should be shared by all Gateway connections to this endpoint
 	clientConnection := newGrpcConnection()
 	defer clientConnection.Close()
-
+	// generation of identity files
 	id := newIdentity(userName)
 	sign := newSign()
 
@@ -118,6 +125,7 @@ userNameLoop:
 	}
 	defer gateway.Close()
 
+	// the logic is similar to the code above
 	var networkName string
 	log.Println("============ connecting to network ============")
 networkNameLoop:
@@ -142,6 +150,7 @@ networkNameLoop:
 	network := gateway.GetNetwork(networkName)
 	log.Println("============ successfully connected to network", networkName, "============")
 
+	// the logic is similar to the code above
 	var contractName string
 	log.Println("============ getting contract ============")
 contractNameLoop:
@@ -169,6 +178,7 @@ contractNameLoop:
 		fmt.Println("-> Please enter the name of the smart contract function you want to invoke, enter help to print the functions available")
 		scfunction := catchOneInput()
 		invokeChaincode(contract, scfunction, userName)
+		// here provides another way to exit the application after every invocation of the smart contract function
 	scContinueConfirmLoop:
 		for {
 			fmt.Print("Do you want to continue? [y/n]: ")
@@ -186,7 +196,11 @@ contractNameLoop:
 	}
 }
 
+// TODO: this function can be further seperated into several functions in the future
 func invokeChaincode(contract *client.Contract, scfunction string, userName string) {
+	// the defer function is important in handling error
+	// once the chaincode invocation is unsuccessful, the panic function will be called and the recover function which is deferred before the error exists
+	// will allow the program to print out the error and recover to the next line after the line that caused error
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("Occured an error while invoking chiancode function: %v...Recovered, please try again.\n", r)
@@ -197,6 +211,7 @@ func invokeChaincode(contract *client.Contract, scfunction string, userName stri
 		instantiate(contract)
 	case "issue", "Issue", "ISSUE":
 		log.Println("============ Issuing a new credit ============")
+		// in the issuing process, functions are added to allow the credit details to be automatically generated
 	issueLoop:
 		for {
 			var creditNumber string
@@ -303,6 +318,7 @@ func invokeChaincode(contract *client.Contract, scfunction string, userName stri
 	}
 }
 
+// instantiate function do nothing, but it can be used to verify whether the connection is successful before interacting with the ledger
 func instantiate(contract *client.Contract) {
 	log.Println("Submit Transaction: Instantiate, function calls the instantiate function, with no effect.")
 
@@ -318,7 +334,7 @@ func instantiate(contract *client.Contract) {
 // Submit a transaction synchronously, blocking until it has been committed to the ledger.
 func issue(contract *client.Contract, creditNumber string, issuer string, issueDateTime string) {
 	log.Println("Submit Transaction: IssueCredit, creates new response credit with credit issuer, credit number and credit issueDateTime.")
-
+	// submit transaction is usually used in the case where an update of the ledger is required
 	_, err := contract.SubmitTransaction("Issue", creditNumber, issuer, issueDateTime)
 	if err != nil {
 		panic(fmt.Errorf("failed to submit transaction: %w", err))
@@ -327,9 +343,10 @@ func issue(contract *client.Contract, creditNumber string, issuer string, issueD
 	fmt.Printf("*** Transaction committed successfully\n")
 }
 
+// querying an existing credit
 func query(contract *client.Contract, creditNumber string, issuer string) {
 	fmt.Printf("Evaluate Transaction: QueryCredit, function returns credit attributes\n")
-
+	// evaluate transaction is usually used in the case where only querying the world state is required
 	evaluateResult, err := contract.EvaluateTransaction("Query", creditNumber, issuer)
 	if err != nil {
 		panic(fmt.Errorf("failed to evaluate transaction: %w", err))
@@ -339,6 +356,7 @@ func query(contract *client.Contract, creditNumber string, issuer string) {
 	fmt.Printf("*** Result:%s\n", result)
 }
 
+// the following are util functions following the GO package document
 // newGrpcConnection creates a gRPC connection to the Gateway server.
 func newGrpcConnection() *grpc.ClientConn {
 	certificate, err := loadCertificate(tlsCertPath)
@@ -406,7 +424,7 @@ func newSign() identity.Sign {
 	return sign
 }
 
-// Format JSON data
+// Format JSON data for pretty printing credit details in JSON format
 func formatJSON(data []byte) string {
 	var prettyJSON bytes.Buffer
 	if err := json.Indent(&prettyJSON, data, " ", ""); err != nil {
@@ -428,31 +446,43 @@ func isExit(s string) bool {
 	return strings.Compare(s, "Exit") == 0 || strings.Compare(s, "exit") == 0 || strings.Compare(s, "EXIT") == 0
 }
 
-// catch console input once
+// catchOneInput() catches one line of the terminal input, ended with \n, it returns a string where \n is stripped
 func catchOneInput() string {
+	// instantiate a new reader
 	reader := bufio.NewReader(os.Stdin)
 	s, _ := reader.ReadString('\n')
+	// get rid of the \n at the end of the string
 	s = strings.Replace(s, "\n", "", -1)
+	// if the string is exit, exit the application directly
+	// this allows the user to exit the application whereever they want and saves the effort of detecting the exit command elsewhere
 	if isExit(s) {
 		exitApp()
 	}
 	return s
 }
 
-// exit application
+// safely exit application
 func exitApp() {
 	log.Println("============ application-golang ends ============")
+	// exit code zero indicates that no error occurred
 	os.Exit(0)
 }
 
+// list functions that can be invoked and their arguments
+// a individual package is used to pretty print a table, see https://github.com/jedib0t/go-pretty/tree/main/table for details of using this package
 func listFuncs() {
 	tof := table.NewWriter()
+	// directing the output to the system standard output
 	tof.SetOutputMirror(os.Stdout)
+	// add one row as the table header
 	tof.AppendHeader(table.Row{"Commend", "Function discription", "Arguments", "Argument discription"})
+	// the beginning of the table content
 	tof.AppendRows([]table.Row{
 		{"list", "List out all the functions that can be called and the arguments required.", "", ""},
 	})
+	// add one line of seperators between two rows
 	tof.AppendSeparator()
+	// multiple lines with no seperators in the middle
 	tof.AppendRows([]table.Row{
 		{"issue", "The issue function collects the information of a new credit and submit a transaction proposal to the blockchain network to issue a new credit.", "credit number", "Credit number is the unique ID number of a credit."},
 		{"", "", "issuer", "Issuer is the unique identity of the entity which issues this credit."},
@@ -463,9 +493,12 @@ func listFuncs() {
 		{"query", "The query function collects the information of an existing credit and submit a evaluation proposal to the world state to query the details of that credit.", "credit number", "Credit number is the unique ID number of a credit."},
 		{"", "", "issuer", "Issuer is the unique identity of the entity which issues this credit."},
 	})
+	// print out the formatted table
 	tof.Render()
 }
 
+// generating the credit number and date time with current time
+// TODO: needs to be modified according to the naming rule of the credit
 func generateCreditNumber() string {
 	var now = time.Now()
 	creditNumber := []string{"Credit", fmt.Sprint(now.Unix()*1e3 + int64(now.Nanosecond())/1e6)}

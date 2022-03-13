@@ -25,7 +25,7 @@ const (
 	// the mspID should be identical to the one used when calling cryptogen to generate credential files
 	// mspID         = "Org1MSP"
 	// the path of the certificates
-	cryptoPath  = "../../fabric-samples/test-network/organizations/peerOrganizations/org1.example.com"
+	cryptoPath  = "../../fabric-samples-2.4/test-network/organizations/peerOrganizations/org1.example.com"
 	certPath    = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem"
 	keyPath     = cryptoPath + "/users/User1@org1.example.com/msp/keystore/"
 	tlsCertPath = cryptoPath + "/peers/peer0.org1.example.com/tls/ca.crt"
